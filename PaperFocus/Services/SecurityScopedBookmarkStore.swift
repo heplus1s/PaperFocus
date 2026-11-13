@@ -10,6 +10,24 @@ enum LinkedLibraryBookmarkKey: String, CaseIterable {
     case endNoteXML = "library.link.endnote.bookmark"
 }
 
+private enum SecurityScopedBookmarkOptions {
+    static var creation: URL.BookmarkCreationOptions {
+        #if os(macOS)
+        [.withSecurityScope]
+        #else
+        [.minimalBookmark]
+        #endif
+    }
+
+    static var resolution: URL.BookmarkResolutionOptions {
+        #if os(macOS)
+        [.withSecurityScope]
+        #else
+        []
+        #endif
+    }
+}
+
 final class SecurityScopedBookmarkStore {
     static let shared = SecurityScopedBookmarkStore()
 
@@ -27,7 +45,7 @@ final class SecurityScopedBookmarkStore {
 
     func saveBookmark(for key: LinkedLibraryBookmarkKey, url: URL, associatedRootPath: String? = nil) throws {
         let data = try url.bookmarkData(
-            options: [.withSecurityScope],
+            options: SecurityScopedBookmarkOptions.creation,
             includingResourceValuesForKeys: nil,
             relativeTo: nil
         )
@@ -56,7 +74,7 @@ final class SecurityScopedBookmarkStore {
         var isStale = false
         guard let url = try? URL(
             resolvingBookmarkData: data,
-            options: [.withSecurityScope],
+            options: SecurityScopedBookmarkOptions.resolution,
             relativeTo: nil,
             bookmarkDataIsStale: &isStale
         ) else {
@@ -90,7 +108,7 @@ final class SecurityScopedBookmarkStore {
         }
 
         guard let data = try? url.bookmarkData(
-            options: [.withSecurityScope],
+            options: SecurityScopedBookmarkOptions.creation,
             includingResourceValuesForKeys: nil,
             relativeTo: nil
         ) else {
@@ -204,7 +222,7 @@ final class SecurityScopedBookmarkStore {
         var isStale = false
         guard let resolved = try? URL(
             resolvingBookmarkData: bookmarkData,
-            options: [.withSecurityScope],
+            options: SecurityScopedBookmarkOptions.resolution,
             relativeTo: nil,
             bookmarkDataIsStale: &isStale
         ) else {
