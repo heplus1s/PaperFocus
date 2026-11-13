@@ -1,0 +1,936 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		BCAD72112F79755900C2F253 /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BCAD72102F79755900C2F253 /* WidgetKit.framework */; };
+		BCAD72132F79755900C2F253 /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BCAD72122F79755900C2F253 /* SwiftUI.framework */; };
+		BCAD72202F79755A00C2F253 /* PaperFocusWidgetsExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = BCAD720E2F79755900C2F253 /* PaperFocusWidgetsExtension.appex */; platformFilter = ios; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		BCAD721E2F79755A00C2F253 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = BCD57E7B2F72E3CD00DFCB74 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = BCAD720D2F79755900C2F253;
+			remoteInfo = PaperFocusWidgetsExtension;
+		};
+		BCD57FCC2F79378F00DFCB74 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = BCD57E7B2F72E3CD00DFCB74 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = BCD57FBC2F79378E00DFCB74;
+			remoteInfo = PaperFocus;
+		};
+		BCD57FD62F79379000DFCB74 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = BCD57E7B2F72E3CD00DFCB74 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = BCD57FBC2F79378E00DFCB74;
+			remoteInfo = PaperFocus;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		BCAD72252F79755A00C2F253 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				BCAD72202F79755A00C2F253 /* PaperFocusWidgetsExtension.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		BCAD720E2F79755900C2F253 /* PaperFocusWidgetsExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = PaperFocusWidgetsExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		BCAD72102F79755900C2F253 /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
+		BCAD72122F79755900C2F253 /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
+		BCD57FBD2F79378E00DFCB74 /* PaperFocus.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = PaperFocus.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		BCD57FCB2F79378F00DFCB74 /* PaperFocusTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = PaperFocusTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		BCD57FD52F79378F00DFCB74 /* PaperFocusUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = PaperFocusUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		BCAD72212F79755A00C2F253 /* Exceptions for "PaperFocusWidgets" folder in "PaperFocusWidgetsExtension" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = BCAD720D2F79755900C2F253 /* PaperFocusWidgetsExtension */;
+		};
+		BCAD72352F79813300C2F253 /* Exceptions for "PaperFocus" folder in "PaperFocus" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				App/AppNavigationState.swift,
+				App/PaperFocusApp.swift,
+				App/RootTabView.swift,
+				Components/PaperCardView.swift,
+				Components/ResumeFocusToolbarButton.swift,
+				Components/SectionHeaderView.swift,
+				Components/TagChipView.swift,
+				Components/TimerCircleView.swift,
+				Models/FocusLiveActivityAttributes.swift,
+				Models/FocusTask.swift,
+				Models/Paper.swift,
+				Models/PaperMetadata.swift,
+				Models/PaperStatus.swift,
+				Models/ReadingNote.swift,
+				Models/ReadingSession.swift,
+				Models/Tag.swift,
+				Resources/AppConstants.swift,
+				Resources/AppSettings.swift,
+				Resources/Assets.xcassets,
+				Services/ChinesePaperMetadataExtractor.swift,
+				Services/CrossrefServices.swift,
+				Services/DOIExtractor.swift,
+				Services/FocusLiveActivityActionRouter.swift,
+				Services/FocusLiveActivityManager.swift,
+				Services/LibraryImportService.swift,
+				Services/PaperFileService.swift,
+				Services/PaperMetadataImporter.swift,
+				Services/PaperSummaryService.swift,
+				Services/PDFPicker.swift,
+				Services/PDFPreviewView.swift,
+				Services/PDFService.swift,
+				Services/PDFTextExtractor.swift,
+				Services/SampleDataService.swift,
+				Services/SecurityScopedBookmarkStore.swift,
+				Services/TimerService.swift,
+				ViewModels/HomeViewModel.swift,
+				ViewModels/LibraryViewModel.swift,
+				ViewModels/TimerViewModel.swift,
+				Views/Home/HomeView.swift,
+				Views/Library/AddPaperView.swift,
+				Views/Library/LibraryView.swift,
+				Views/Library/PaperDatailView.swift,
+				Views/Library/PaperDropZoneView.swift,
+				Views/Library/PaperInspectorView.swift,
+				Views/Session/SessionSummaryView.swift,
+				Views/Settings/AboutPaperFocusView.swift,
+				Views/Settings/SettingsView.swift,
+				Views/Timer/FloatingFocusTimerHUD.swift,
+				Views/Timer/FocusTimerView.swift,
+				Views/Timer/MacReadingAIDialogView.swift,
+				Views/Timer/SidebarFocusTimerView.swift,
+			);
+			target = BCD57FBC2F79378E00DFCB74 /* PaperFocus */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
+/* Begin PBXFileSystemSynchronizedRootGroup section */
+		BCAD72142F79755900C2F253 /* PaperFocusWidgets */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				BCAD72212F79755A00C2F253 /* Exceptions for "PaperFocusWidgets" folder in "PaperFocusWidgetsExtension" target */,
+			);
+			path = PaperFocusWidgets;
+			sourceTree = "<group>";
+		};
+		BCD57E852F72E3CD00DFCB74 /* PaperFocus */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				BCAD72352F79813300C2F253 /* Exceptions for "PaperFocus" folder in "PaperFocus" target */,
+			);
+			path = PaperFocus;
+			sourceTree = "<group>";
+		};
+		BCD57E952F72E3CE00DFCB74 /* PaperFocusTests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = PaperFocusTests;
+			sourceTree = "<group>";
+		};
+		BCD57E9F2F72E3CE00DFCB74 /* PaperFocusUITests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = PaperFocusUITests;
+			sourceTree = "<group>";
+		};
+/* End PBXFileSystemSynchronizedRootGroup section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		BCAD720B2F79755900C2F253 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				BCAD72132F79755900C2F253 /* SwiftUI.framework in Frameworks */,
+				BCAD72112F79755900C2F253 /* WidgetKit.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		BCD57FBA2F79378E00DFCB74 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		BCD57FC82F79378F00DFCB74 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		BCD57FD22F79378F00DFCB74 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		BCAD720F2F79755900C2F253 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				BCAD72102F79755900C2F253 /* WidgetKit.framework */,
+				BCAD72122F79755900C2F253 /* SwiftUI.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		BCD57E7A2F72E3CD00DFCB74 = {
+			isa = PBXGroup;
+			children = (
+				BCD57E852F72E3CD00DFCB74 /* PaperFocus */,
+				BCD57E952F72E3CE00DFCB74 /* PaperFocusTests */,
+				BCD57E9F2F72E3CE00DFCB74 /* PaperFocusUITests */,
+				BCAD72142F79755900C2F253 /* PaperFocusWidgets */,
+				BCAD720F2F79755900C2F253 /* Frameworks */,
+				BCD57E842F72E3CD00DFCB74 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		BCD57E842F72E3CD00DFCB74 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				BCD57FBD2F79378E00DFCB74 /* PaperFocus.app */,
+				BCD57FCB2F79378F00DFCB74 /* PaperFocusTests.xctest */,
+				BCD57FD52F79378F00DFCB74 /* PaperFocusUITests.xctest */,
+				BCAD720E2F79755900C2F253 /* PaperFocusWidgetsExtension.appex */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		BCAD720D2F79755900C2F253 /* PaperFocusWidgetsExtension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = BCAD72222F79755A00C2F253 /* Build configuration list for PBXNativeTarget "PaperFocusWidgetsExtension" */;
+			buildPhases = (
+				BCAD720A2F79755900C2F253 /* Sources */,
+				BCAD720B2F79755900C2F253 /* Frameworks */,
+				BCAD720C2F79755900C2F253 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				BCAD72142F79755900C2F253 /* PaperFocusWidgets */,
+			);
+			name = PaperFocusWidgetsExtension;
+			packageProductDependencies = (
+			);
+			productName = PaperFocusWidgetsExtension;
+			productReference = BCAD720E2F79755900C2F253 /* PaperFocusWidgetsExtension.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
+		BCD57FBC2F79378E00DFCB74 /* PaperFocus */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = BCD57FDD2F79379000DFCB74 /* Build configuration list for PBXNativeTarget "PaperFocus" */;
+			buildPhases = (
+				BCD57FB92F79378E00DFCB74 /* Sources */,
+				BCD57FBA2F79378E00DFCB74 /* Frameworks */,
+				BCD57FBB2F79378E00DFCB74 /* Resources */,
+				D1A7C0DE0A1B2C3D4E5F6001 /* Copy Localization Resources */,
+				BCAD72252F79755A00C2F253 /* Embed Foundation Extensions */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				BCAD721F2F79755A00C2F253 /* PBXTargetDependency */,
+			);
+			name = PaperFocus;
+			packageProductDependencies = (
+			);
+			productName = PaperFocus;
+			productReference = BCD57FBD2F79378E00DFCB74 /* PaperFocus.app */;
+			productType = "com.apple.product-type.application";
+		};
+		BCD57FCA2F79378F00DFCB74 /* PaperFocusTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = BCD57FE02F79379000DFCB74 /* Build configuration list for PBXNativeTarget "PaperFocusTests" */;
+			buildPhases = (
+				BCD57FC72F79378F00DFCB74 /* Sources */,
+				BCD57FC82F79378F00DFCB74 /* Frameworks */,
+				BCD57FC92F79378F00DFCB74 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				BCD57FCD2F79378F00DFCB74 /* PBXTargetDependency */,
+			);
+			name = PaperFocusTests;
+			packageProductDependencies = (
+			);
+			productName = PaperFocusTests;
+			productReference = BCD57FCB2F79378F00DFCB74 /* PaperFocusTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		BCD57FD42F79378F00DFCB74 /* PaperFocusUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = BCD57FE32F79379000DFCB74 /* Build configuration list for PBXNativeTarget "PaperFocusUITests" */;
+			buildPhases = (
+				BCD57FD12F79378F00DFCB74 /* Sources */,
+				BCD57FD22F79378F00DFCB74 /* Frameworks */,
+				BCD57FD32F79378F00DFCB74 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				BCD57FD72F79379000DFCB74 /* PBXTargetDependency */,
+			);
+			name = PaperFocusUITests;
+			packageProductDependencies = (
+			);
+			productName = PaperFocusUITests;
+			productReference = BCD57FD52F79378F00DFCB74 /* PaperFocusUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		BCD57E7B2F72E3CD00DFCB74 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 2630;
+				LastUpgradeCheck = 2630;
+				TargetAttributes = {
+					BCAD720D2F79755900C2F253 = {
+						CreatedOnToolsVersion = 26.3;
+					};
+					BCD57FBC2F79378E00DFCB74 = {
+						CreatedOnToolsVersion = 26.3;
+					};
+					BCD57FCA2F79378F00DFCB74 = {
+						CreatedOnToolsVersion = 26.3;
+						TestTargetID = BCD57FBC2F79378E00DFCB74;
+					};
+					BCD57FD42F79378F00DFCB74 = {
+						CreatedOnToolsVersion = 26.3;
+						TestTargetID = BCD57FBC2F79378E00DFCB74;
+					};
+				};
+			};
+			buildConfigurationList = BCD57E7E2F72E3CD00DFCB74 /* Build configuration list for PBXProject "PaperFocus" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+				"zh-Hans",
+				es,
+				ru,
+				de,
+				ja,
+				pt,
+				fr,
+				it,
+				ko,
+				"zh-Hant",
+			);
+			mainGroup = BCD57E7A2F72E3CD00DFCB74;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			productRefGroup = BCD57E842F72E3CD00DFCB74 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				BCD57FBC2F79378E00DFCB74 /* PaperFocus */,
+				BCD57FCA2F79378F00DFCB74 /* PaperFocusTests */,
+				BCD57FD42F79378F00DFCB74 /* PaperFocusUITests */,
+				BCAD720D2F79755900C2F253 /* PaperFocusWidgetsExtension */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		BCAD720C2F79755900C2F253 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		BCD57FBB2F79378E00DFCB74 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		BCD57FC92F79378F00DFCB74 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		BCD57FD32F79378F00DFCB74 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		D1A7C0DE0A1B2C3D4E5F6001 /* Copy Localization Resources */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"$(SRCROOT)/PaperFocus/en.lproj/Localizable.strings",
+				"$(SRCROOT)/PaperFocus/zh-Hans.lproj/Localizable.strings",
+				"$(SRCROOT)/PaperFocus/zh-Hant.lproj/Localizable.strings",
+				"$(SRCROOT)/PaperFocus/ja.lproj/Localizable.strings",
+				"$(SRCROOT)/PaperFocus/ko.lproj/Localizable.strings",
+				"$(SRCROOT)/PaperFocus/fr.lproj/Localizable.strings",
+				"$(SRCROOT)/PaperFocus/de.lproj/Localizable.strings",
+				"$(SRCROOT)/PaperFocus/es.lproj/Localizable.strings",
+				"$(SRCROOT)/PaperFocus/it.lproj/Localizable.strings",
+				"$(SRCROOT)/PaperFocus/pt.lproj/Localizable.strings",
+				"$(SRCROOT)/PaperFocus/ru.lproj/Localizable.strings",
+			);
+			name = "Copy Localization Resources";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+				"$(TARGET_BUILD_DIR)/$(UNLOCALIZED_RESOURCES_FOLDER_PATH)/en.lproj/Localizable.strings",
+				"$(TARGET_BUILD_DIR)/$(UNLOCALIZED_RESOURCES_FOLDER_PATH)/zh-Hans.lproj/Localizable.strings",
+				"$(TARGET_BUILD_DIR)/$(UNLOCALIZED_RESOURCES_FOLDER_PATH)/zh-Hant.lproj/Localizable.strings",
+				"$(TARGET_BUILD_DIR)/$(UNLOCALIZED_RESOURCES_FOLDER_PATH)/ja.lproj/Localizable.strings",
+				"$(TARGET_BUILD_DIR)/$(UNLOCALIZED_RESOURCES_FOLDER_PATH)/ko.lproj/Localizable.strings",
+				"$(TARGET_BUILD_DIR)/$(UNLOCALIZED_RESOURCES_FOLDER_PATH)/fr.lproj/Localizable.strings",
+				"$(TARGET_BUILD_DIR)/$(UNLOCALIZED_RESOURCES_FOLDER_PATH)/de.lproj/Localizable.strings",
+				"$(TARGET_BUILD_DIR)/$(UNLOCALIZED_RESOURCES_FOLDER_PATH)/es.lproj/Localizable.strings",
+				"$(TARGET_BUILD_DIR)/$(UNLOCALIZED_RESOURCES_FOLDER_PATH)/it.lproj/Localizable.strings",
+				"$(TARGET_BUILD_DIR)/$(UNLOCALIZED_RESOURCES_FOLDER_PATH)/pt.lproj/Localizable.strings",
+				"$(TARGET_BUILD_DIR)/$(UNLOCALIZED_RESOURCES_FOLDER_PATH)/ru.lproj/Localizable.strings",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "set -e\nRESOURCE_DIR=\"$TARGET_BUILD_DIR/$UNLOCALIZED_RESOURCES_FOLDER_PATH\"\nmkdir -p \"$RESOURCE_DIR\"\nfor file in \\\n  \"$SCRIPT_INPUT_FILE_0\" \\\n  \"$SCRIPT_INPUT_FILE_1\" \\\n  \"$SCRIPT_INPUT_FILE_2\" \\\n  \"$SCRIPT_INPUT_FILE_3\" \\\n  \"$SCRIPT_INPUT_FILE_4\" \\\n  \"$SCRIPT_INPUT_FILE_5\" \\\n  \"$SCRIPT_INPUT_FILE_6\" \\\n  \"$SCRIPT_INPUT_FILE_7\" \\\n  \"$SCRIPT_INPUT_FILE_8\" \\\n  \"$SCRIPT_INPUT_FILE_9\" \\\n  \"$SCRIPT_INPUT_FILE_10\"; do\n  [ -f \"$file\" ] || continue\n  base=$(basename \"$(dirname \"$file\")\")\n  mkdir -p \"$RESOURCE_DIR/$base\"\n  cp \"$file\" \"$RESOURCE_DIR/$base/Localizable.strings\"\ndone\n";
+		};
+/* End PBXShellScriptBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		BCAD720A2F79755900C2F253 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		BCD57FB92F79378E00DFCB74 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		BCD57FC72F79378F00DFCB74 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		BCD57FD12F79378F00DFCB74 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		BCAD721F2F79755A00C2F253 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			platformFilter = ios;
+			target = BCAD720D2F79755900C2F253 /* PaperFocusWidgetsExtension */;
+			targetProxy = BCAD721E2F79755A00C2F253 /* PBXContainerItemProxy */;
+		};
+		BCD57FCD2F79378F00DFCB74 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = BCD57FBC2F79378E00DFCB74 /* PaperFocus */;
+			targetProxy = BCD57FCC2F79378F00DFCB74 /* PBXContainerItemProxy */;
+		};
+		BCD57FD72F79379000DFCB74 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = BCD57FBC2F79378E00DFCB74 /* PaperFocus */;
+			targetProxy = BCD57FD62F79379000DFCB74 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		BCAD72232F79755A00C2F253 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = PaperFocusWidgets/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = PaperFocusWidgets;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				INFOPLIST_KEY_NSSupportsLiveActivities = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.2;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.paperfocus.PaperFocus.PaperFocusWidgets;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		BCAD72242F79755A00C2F253 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = PaperFocusWidgets/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = PaperFocusWidgets;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				INFOPLIST_KEY_NSSupportsLiveActivities = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.2;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.paperfocus.PaperFocus.PaperFocusWidgets;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		BCD57EA42F72E3CE00DFCB74 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		BCD57EA52F72E3CE00DFCB74 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SWIFT_COMPILATION_MODE = wholemodule;
+			};
+			name = Release;
+		};
+		BCD57FDE2F79379000DFCB74 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_APP_SANDBOX = YES;
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_INCOMING_NETWORK_CONNECTIONS = NO;
+				ENABLE_OUTGOING_NETWORK_CONNECTIONS = YES;
+				ENABLE_PREVIEWS = YES;
+				ENABLE_RESOURCE_ACCESS_AUDIO_INPUT = NO;
+				ENABLE_RESOURCE_ACCESS_BLUETOOTH = NO;
+				ENABLE_RESOURCE_ACCESS_CALENDARS = NO;
+				ENABLE_RESOURCE_ACCESS_CAMERA = NO;
+				ENABLE_RESOURCE_ACCESS_CONTACTS = NO;
+				ENABLE_RESOURCE_ACCESS_LOCATION = NO;
+				ENABLE_RESOURCE_ACCESS_PRINTING = NO;
+				ENABLE_RESOURCE_ACCESS_USB = NO;
+				ENABLE_USER_SELECTED_FILES = readwrite;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleAllowMixedLocalizations = YES;
+				INFOPLIST_KEY_CFBundleDevelopmentRegion = en;
+				INFOPLIST_KEY_NSSupportsLiveActivities = YES;
+				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
+				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
+				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
+				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphonesimulator*]" = YES;
+				"INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphoneos*]" = YES;
+				"INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphonesimulator*]" = YES;
+				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphoneos*]" = UIStatusBarStyleDefault;
+				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphonesimulator*]" = UIStatusBarStyleDefault;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 26.2;
+				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
+				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
+				MACOSX_DEPLOYMENT_TARGET = 15.7;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.paperfocus.PaperFocus.test3;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				REGISTER_APP_GROUPS = YES;
+				SDKROOT = auto;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx xros xrsimulator";
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2,7";
+				XROS_DEPLOYMENT_TARGET = 26.2;
+			};
+			name = Debug;
+		};
+		BCD57FDF2F79379000DFCB74 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_APP_SANDBOX = YES;
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_INCOMING_NETWORK_CONNECTIONS = NO;
+				ENABLE_OUTGOING_NETWORK_CONNECTIONS = YES;
+				ENABLE_PREVIEWS = YES;
+				ENABLE_RESOURCE_ACCESS_AUDIO_INPUT = NO;
+				ENABLE_RESOURCE_ACCESS_BLUETOOTH = NO;
+				ENABLE_RESOURCE_ACCESS_CALENDARS = NO;
+				ENABLE_RESOURCE_ACCESS_CAMERA = NO;
+				ENABLE_RESOURCE_ACCESS_CONTACTS = NO;
+				ENABLE_RESOURCE_ACCESS_LOCATION = NO;
+				ENABLE_RESOURCE_ACCESS_PRINTING = NO;
+				ENABLE_RESOURCE_ACCESS_USB = NO;
+				ENABLE_USER_SELECTED_FILES = readwrite;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleAllowMixedLocalizations = YES;
+				INFOPLIST_KEY_CFBundleDevelopmentRegion = en;
+				INFOPLIST_KEY_NSSupportsLiveActivities = YES;
+				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
+				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
+				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
+				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphonesimulator*]" = YES;
+				"INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphoneos*]" = YES;
+				"INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphonesimulator*]" = YES;
+				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphoneos*]" = UIStatusBarStyleDefault;
+				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphonesimulator*]" = UIStatusBarStyleDefault;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 26.2;
+				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
+				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
+				MACOSX_DEPLOYMENT_TARGET = 15.7;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.paperfocus.PaperFocus.test3;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				REGISTER_APP_GROUPS = YES;
+				SDKROOT = auto;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx xros xrsimulator";
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2,7";
+				XROS_DEPLOYMENT_TARGET = 26.2;
+			};
+			name = Release;
+		};
+		BCD57FE12F79379000DFCB74 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.2;
+				MACOSX_DEPLOYMENT_TARGET = 15.7;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.paperfocus.PaperFocus.test.PaperFocusTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = auto;
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx xros xrsimulator";
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2,7";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/PaperFocus.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/PaperFocus";
+				XROS_DEPLOYMENT_TARGET = 26.2;
+			};
+			name = Debug;
+		};
+		BCD57FE22F79379000DFCB74 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.2;
+				MACOSX_DEPLOYMENT_TARGET = 15.7;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.paperfocus.PaperFocus.test.PaperFocusTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = auto;
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx xros xrsimulator";
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2,7";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/PaperFocus.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/PaperFocus";
+				XROS_DEPLOYMENT_TARGET = 26.2;
+			};
+			name = Release;
+		};
+		BCD57FE42F79379000DFCB74 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.2;
+				MACOSX_DEPLOYMENT_TARGET = 15.7;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.paperfocus.PaperFocus.test.PaperFocusUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = auto;
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx xros xrsimulator";
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2,7";
+				TEST_TARGET_NAME = PaperFocus;
+				XROS_DEPLOYMENT_TARGET = 26.2;
+			};
+			name = Debug;
+		};
+		BCD57FE52F79379000DFCB74 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.2;
+				MACOSX_DEPLOYMENT_TARGET = 15.7;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.paperfocus.PaperFocus.test.PaperFocusUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = auto;
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx xros xrsimulator";
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2,7";
+				TEST_TARGET_NAME = PaperFocus;
+				XROS_DEPLOYMENT_TARGET = 26.2;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		BCAD72222F79755A00C2F253 /* Build configuration list for PBXNativeTarget "PaperFocusWidgetsExtension" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				BCAD72232F79755A00C2F253 /* Debug */,
+				BCAD72242F79755A00C2F253 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		BCD57E7E2F72E3CD00DFCB74 /* Build configuration list for PBXProject "PaperFocus" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				BCD57EA42F72E3CE00DFCB74 /* Debug */,
+				BCD57EA52F72E3CE00DFCB74 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		BCD57FDD2F79379000DFCB74 /* Build configuration list for PBXNativeTarget "PaperFocus" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				BCD57FDE2F79379000DFCB74 /* Debug */,
+				BCD57FDF2F79379000DFCB74 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		BCD57FE02F79379000DFCB74 /* Build configuration list for PBXNativeTarget "PaperFocusTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				BCD57FE12F79379000DFCB74 /* Debug */,
+				BCD57FE22F79379000DFCB74 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		BCD57FE32F79379000DFCB74 /* Build configuration list for PBXNativeTarget "PaperFocusUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				BCD57FE42F79379000DFCB74 /* Debug */,
+				BCD57FE52F79379000DFCB74 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = BCD57E7B2F72E3CD00DFCB74 /* Project object */;
+}

@@ -1,0 +1,136 @@
+//
+//  SecurityScopedBookmarkStore.swift
+//  PaperFocus
+//
+
+import Foundation
+
+enum LinkedLibraryBookmarkKey: String, CaseIterable {
+    case zoteroLocal = "library.link.zotero.bookmark"
+    case endNoteXML = "library.link.endnote.bookmark"
+}
+
+final class SecurityScopedBookmarkStore {
+    static let shared = SecurityScopedBookmarkStore()
+
+    struct AccessHandle {
+        fileprivate let rootPath: String
+    }
+
+    private let userDefaults = UserDefaults.standard
+    private var activeAccessCounts: [String: Int] = [:]
+    private var activeURLs: [String: URL] = [:]
+
+    private init() { }
+
+    func saveBookmark(for key: LinkedLibraryBookmarkKey, url: URL, associatedRootPath: String? = nil) throws {
+        let data = try url.bookmarkData(
+            options: [.withSecurityScope],
+            includingResourceValuesForKeys: nil,
+            relativeTo: nil
+        )
+        userDefaults.set(data, forKey: key.rawValue)
+
+        if let associatedRootPath, !associatedRootPath.isEmpty {
+            userDefaults.set(associatedRootPath, forKey: associatedRootPathKey(for: key))
+        } else {
+            userDefaults.removeObject(forKey: associatedRootPathKey(for: key))
+        }
+    }
+
+    func clearBookmark(for key: LinkedLibraryBookmarkKey) {
+        if let resolved = resolveURL(for: key) {
+            endAccessIfNeeded(forRootPath: resolved.standardizedFileURL.path)
+        }
+        userDefaults.removeObject(forKey: key.rawValue)
+        userDefaults.removeObject(forKey: associatedRootPathKey(for: key))
+    }
+
+    func resolveURL(for key: LinkedLibraryBookmarkKey) -> URL? {
+        guard let data = userDefaults.data(forKey: key.rawValue) else {
+            return nil
+        }
+
+        var isStale = false
+        guard let url = try? URL(
+            resolvingBookmarkData: data,
+            options: [.withSecurityScope],
+            relativeTo: nil,
+            bookmarkDataIsStale: &isStale
+        ) else {
+            return nil
+        }
+
+        if isStale {
+            try? saveBookmark(for: key, url: url)
+        }
+
+        return url
+    }
+
+    func associatedRootPath(for key: LinkedLibraryBookmarkKey) -> String? {
+        let rawValue = userDefaults.string(forKey: associatedRootPathKey(for: key))
+        let trimmed = rawValue?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        return trimmed.isEmpty ? nil : trimmed
+    }
+
+    func beginAccess(for key: LinkedLibraryBookmarkKey) -> AccessHandle? {
+        guard let url = resolveURL(for: key) else { return nil }
+        return beginAccess(toRootURL: url)
+    }
+
+    func beginAccess(forExternalFile fileURL: URL) -> AccessHandle? {
+        let standardizedFileURL = fileURL.standardizedFileURL
+
+        for key in LinkedLibraryBookmarkKey.allCases {
+            guard let rootURL = resolveURL(for: key)?.standardizedFileURL else { continue }
+            let rootPath = associatedRootPath(for: key) ?? rootURL.path
+            let filePath = standardizedFileURL.path
+
+            if filePath == rootPath || filePath.hasPrefix(rootPath + "/") {
+                return beginAccess(toRootURL: rootURL)
+            }
+        }
+
+        return nil
+    }
+
+    func endAccess(_ handle: AccessHandle?) {
+        guard let handle else { return }
+        endAccessIfNeeded(forRootPath: handle.rootPath)
+    }
+
+    private func beginAccess(toRootURL url: URL) -> AccessHandle? {
+        let rootPath = url.standardizedFileURL.path
+
+        if let count = activeAccessCounts[rootPath] {
+            activeAccessCounts[rootPath] = count + 1
+            return AccessHandle(rootPath: rootPath)
+        }
+
+        guard url.startAccessingSecurityScopedResource() else {
+            return nil
+        }
+
+        activeAccessCounts[rootPath] = 1
+        activeURLs[rootPath] = url
+        return AccessHandle(rootPath: rootPath)
+    }
+
+    private func endAccessIfNeeded(forRootPath rootPath: String) {
+        guard let count = activeAccessCounts[rootPath] else { return }
+
+        if count > 1 {
+            activeAccessCounts[rootPath] = count - 1
+            return
+        }
+
+        activeAccessCounts[rootPath] = nil
+        let url = activeURLs.removeValue(forKey: rootPath)
+        url?.stopAccessingSecurityScopedResource()
+    }
+
+    private func associatedRootPathKey(for key: LinkedLibraryBookmarkKey) -> String {
+        "\(key.rawValue).rootPath"
+    }
+}

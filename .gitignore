@@ -1,0 +1,19 @@
+# Xcode
+xcuserdata/
+*.xcuserstate
+DerivedData/
+build/
+*.moved-aside
+*.hmap
+*.ipa
+*.dSYM.zip
+*.dSYM
+
+# macOS
+.DS_Store
+._*
+.AppleDouble
+.LSOverride
+
+# SwiftPM
+.swiftpm/xcode/package.xcworkspace/xcuserdata/
