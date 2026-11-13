@@ -96,7 +96,11 @@ struct LibraryImportModeSheet: View {
                             Text(LocalizedStringKey(item.title)).tag(item)
                         }
                     }
+                    #if os(macOS)
                     .pickerStyle(.inline)
+                    #else
+                    .pickerStyle(.menu)
+                    #endif
                     .labelsHidden()
                 }
 
@@ -121,7 +125,9 @@ struct LibraryImportModeSheet: View {
                 }
             }
         }
+        #if os(macOS)
         .frame(minWidth: 560, minHeight: 520)
+        #endif
         .fileImporter(
             isPresented: $showImporter,
             allowedContentTypes: importerTypes,
@@ -146,26 +152,29 @@ struct LibraryImportModeSheet: View {
                 .foregroundStyle(.secondary)
 
             if candidates.isEmpty && customURL == nil {
-                Text("未在默认位置找到 Zotero 文献库。请选择数据目录或 zotero.sqlite。")
+                Text(noLocalZoteroText)
                     .font(.callout)
+                    .fixedSize(horizontal: false, vertical: true)
             } else {
                 ForEach(candidates) { candidate in
                     Button {
                         selectedRootPath = candidate.rootPath
                         customURL = nil
                     } label: {
-                        HStack(alignment: .firstTextBaseline) {
+                        HStack(alignment: .center, spacing: 12) {
                             Image(systemName: selectedRootPath == candidate.rootPath && customURL == nil ? "largecircle.fill.circle" : "circle")
                             VStack(alignment: .leading, spacing: 2) {
                                 Text(LocalizedStringKey(candidate.sourceDescription))
                                 Text(candidate.rootPath)
                                     .font(.caption)
                                     .foregroundStyle(.secondary)
-                                    .lineLimit(1)
+                                    .lineLimit(2)
                                     .truncationMode(.middle)
                             }
-                            Spacer()
+                            Spacer(minLength: 0)
                         }
+                        .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+                        .contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
                 }
@@ -182,6 +191,7 @@ struct LibraryImportModeSheet: View {
             Button("选择其他位置…") {
                 presentImporter(for: .zotero, commitImmediately: false)
             }
+            .frame(minHeight: 44)
             .disabled(isWorking)
 
             Toggle("将 Zotero 设为唯一关联文献库，并停用应用内文献库", isOn: $useAsSoleLibrary)
@@ -201,6 +211,7 @@ struct LibraryImportModeSheet: View {
             Button("关联 Zotero 账户") {
                 linkAccount()
             }
+            .frame(minHeight: 44)
             .disabled(isWorking || zoteroAccountAPIKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
 
             if !statusMessage.isEmpty {
@@ -260,7 +271,19 @@ struct LibraryImportModeSheet: View {
         if candidates.count == 1 {
             return AppSettings.localizedString("已在本机找到 Zotero 文献库。请确认要关联的位置。")
         }
+        #if os(iOS)
+        return AppSettings.localizedString("在 iPhone 和 iPad 上，请使用系统文件选择器选择 Zotero 数据目录，或填写 API 密钥。不会自动搜索 Mac 上的默认数据目录。")
+        #else
         return AppSettings.localizedString("将在默认数据目录和 Zotero 配置目录中查找文献库。")
+        #endif
+    }
+
+    private var noLocalZoteroText: String {
+        #if os(iOS)
+        AppSettings.localizedString("未在此设备上找到可直接读取的 Zotero 文献库。请选择数据目录或 zotero.sqlite，或填写 API 密钥。")
+        #else
+        AppSettings.localizedString("未在默认位置找到 Zotero 文献库。请选择数据目录或 zotero.sqlite。")
+        #endif
     }
 
     private var otherModeText: String {

@@ -17,6 +17,8 @@ import SwiftData
 #if os(macOS)
 import AppKit
 import UniformTypeIdentifiers
+#elseif os(iOS)
+import UIKit
 #endif
 
 private enum LibraryStatusFilter: String, CaseIterable, Identifiable {
@@ -61,11 +63,8 @@ private enum LibraryStatusFilter: String, CaseIterable, Identifiable {
 
 struct LibraryView: View {
     @Environment(\.modelContext) private var modelContext
-    @EnvironmentObject private var navigationState: AppNavigationState
-
-    #if os(iOS)
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
-    #endif
+    @EnvironmentObject private var navigationState: AppNavigationState
 
     @Query(sort: \Paper.createdAt, order: .reverse) private var queriedPapers: [Paper]
     @Query(sort: \FocusTask.createdAt, order: .reverse) private var focusTasks: [FocusTask]
@@ -207,9 +206,13 @@ struct LibraryView: View {
         #endif
     }
 
+    private var usesCompactLibraryControls: Bool {
+        horizontalSizeClass == .compact
+    }
+
     #if os(iOS)
     private var isCompactLibraryLayout: Bool {
-        horizontalSizeClass == .compact
+        usesCompactLibraryControls
     }
 
     private var shouldShowInspectorPane: Bool {
@@ -524,39 +527,9 @@ struct LibraryView: View {
 
     private var libraryContentPane: some View {
         VStack(spacing: 12) {
-            #if os(macOS)
-            PaperDropZoneView(isImporting: isImportingPDF) { urls in
-                handleDroppedFiles(urls)
-            } onRequestImport: {
-                importMode = .zotero
-                stagedImportURL = nil
-                showImportModes = true
-            }
-            #endif
+            libraryImportEntry
 
-            HStack(spacing: 12) {
-                TextField("搜索标题、作者、期刊或 DOI", text: $searchText)
-
-                Picker("状态筛选", selection: $selectedStatus) {
-                    ForEach(statusOptions, id: \.self) { status in
-                        Text(status.displayName).tag(status)
-                    }
-                }
-                .frame(width: 220)
-
-                if hasLinkedLibrary {
-                    Button {
-                        refreshLinkedLibraries()
-                    } label: {
-                        if isRefreshingLinkedLibrary {
-                            Label("同步中", systemImage: "arrow.triangle.2.circlepath")
-                        } else {
-                            Label("同步库", systemImage: "arrow.triangle.2.circlepath")
-                        }
-                    }
-                    .disabled(isRefreshingLinkedLibrary)
-                }
-            }
+            libraryFilterBar
 
             if !librarySyncHint.isEmpty {
                 HStack(spacing: 8) {
@@ -707,12 +680,106 @@ struct LibraryView: View {
                             .foregroundStyle(.secondary)
                     }
                 }
-                .frame(maxWidth: .infinity, alignment: .leading)
+                .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
                 .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
+            .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+                Button("删除", role: .destructive) {
+                    deletePaper(paper)
+                }
+            }
+            .swipeActions(edge: .leading, allowsFullSwipe: false) {
+                Button("在应用内阅读") {
+                    openPaperInApp(paper)
+                }
+                .tint(.accentColor)
+            }
         }
         #endif
+    }
+
+    @ViewBuilder
+    private var libraryImportEntry: some View {
+        #if os(iOS)
+        if UIDevice.current.userInterfaceIdiom == .pad {
+            PaperDropZoneView(isImporting: isImportingPDF) { urls in
+                handleDroppedFiles(urls)
+            } onRequestImport: {
+                openLibraryImport()
+            }
+        } else {
+            Button(action: openLibraryImport) {
+                Label("导入文献", systemImage: "square.and.arrow.down")
+                    .frame(maxWidth: .infinity, minHeight: 44)
+            }
+            .buttonStyle(.bordered)
+            .disabled(isImportingPDF)
+        }
+        #else
+        PaperDropZoneView(isImporting: isImportingPDF) { urls in
+            handleDroppedFiles(urls)
+        } onRequestImport: {
+            openLibraryImport()
+        }
+        #endif
+    }
+
+    private func openLibraryImport() {
+        importMode = .zotero
+        stagedImportURL = nil
+        showImportModes = true
+    }
+
+    @ViewBuilder
+    private var libraryFilterBar: some View {
+        if usesCompactLibraryControls {
+            VStack(alignment: .leading, spacing: 8) {
+                TextField("搜索标题、作者、期刊或 DOI", text: $searchText)
+                    .textFieldStyle(.roundedBorder)
+                HStack(spacing: 8) {
+                    Picker("状态筛选", selection: $selectedStatus) {
+                        ForEach(statusOptions, id: \.self) { status in
+                            Text(status.displayName).tag(status)
+                        }
+                    }
+                    .pickerStyle(.menu)
+                    .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+                    if hasLinkedLibrary {
+                        librarySyncButton
+                    }
+                }
+            }
+        } else {
+            HStack(spacing: 12) {
+                TextField("搜索标题、作者、期刊或 DOI", text: $searchText)
+
+                Picker("状态筛选", selection: $selectedStatus) {
+                    ForEach(statusOptions, id: \.self) { status in
+                        Text(status.displayName).tag(status)
+                    }
+                }
+                .frame(width: 220)
+
+                if hasLinkedLibrary {
+                    librarySyncButton
+                }
+            }
+        }
+    }
+
+    private var librarySyncButton: some View {
+        Button {
+            refreshLinkedLibraries()
+        } label: {
+            if isRefreshingLinkedLibrary {
+                Label("同步中", systemImage: "arrow.triangle.2.circlepath")
+            } else {
+                Label("同步库", systemImage: "arrow.triangle.2.circlepath")
+            }
+        }
+        .frame(minHeight: 44)
+        .disabled(isRefreshingLinkedLibrary)
     }
 
     private var emptyDescription: String {

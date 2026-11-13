@@ -612,6 +612,12 @@
 "默认阅读模式" = "Default Reading Mode";
 "默认阅读目标" = "Default Reading Goal";
 
+"在 iPhone 和 iPad 上，请使用系统文件选择器选择 Zotero 数据目录，或填写 API 密钥。此选项不会自动搜索 Mac 上的默认数据目录。关闭后，继续使用 PaperFocus 自己的文献库。" = "On iPhone and iPad, choose a Zotero data folder with the system file picker, or enter an API key. The default data directory on a Mac is not searched automatically. Turn this off to keep PaperFocus’s own library.";
+"在 iPhone 和 iPad 上，通过系统文件选择器关联 Zotero 或 EndNote。关闭“导入时复制附件”后，将直接打开原始文件。PaperFocus 保存阅读状态与摘要，不改写外部文献库。" = "On iPhone and iPad, link Zotero or EndNote with the system file picker. When attachment copying is off, original files are opened directly. PaperFocus stores reading state and summaries and does not modify the external library.";
+"在 iPhone 和 iPad 上，请使用系统文件选择器选择 Zotero 数据目录，或填写 API 密钥。不会自动搜索 Mac 上的默认数据目录。" = "On iPhone and iPad, choose a Zotero data folder with the system file picker, or enter an API key. The default data directory on a Mac is not searched automatically.";
+"未在此设备上找到可直接读取的 Zotero 文献库。请选择数据目录或 zotero.sqlite，或填写 API 密钥。" = "No Zotero library on this device can be read directly. Choose a data directory or zotero.sqlite, or enter an API key.";
+"未在默认位置找到 Zotero 文献库。请选择数据目录或 zotero.sqlite。" = "No Zotero library was found in the default locations. Choose a data directory or zotero.sqlite.";
+"如果只是临时迁移文献或导入历史 PDF，可以继续使用一次性导入。" = "For a one-time migration or a set of existing PDFs, use one-time import.";
 "优先使用本机 Zotero 文献库" = "Use the local Zotero library";
 "开启后，若发现唯一的本机 Zotero 文献库且尚未关联，启动时会自动关联该文献库，而不另行建立独立文献库。关闭后，继续使用 PaperFocus 自己的文献库。" = "When a single local Zotero library is found and none is linked yet, PaperFocus links it at launch instead of creating a separate library. Turn this off to keep PaperFocus’s own library.";
 "仅使用 Zotero 文献库" = "Use only the Zotero library";
@@ -637,11 +643,11 @@
 "选择 PDF 文件" = "Choose PDF files";
 "选择 PDF 文件夹" = "Choose PDF folder";
 "关联 Zotero 账户" = "Link Zotero account";
-"在 Zotero 网站创建 API 密钥后填入。密钥仅保存在本机。" = "Create an API key on the Zotero website and enter it here. The key is stored only on this Mac.";
+"在 Zotero 网站创建 API 密钥后填入。密钥仅保存在本机。" = "Create an API key on the Zotero website and enter it here. The key is stored only on this device.";
 "未在默认位置找到 Zotero 文献库。请选择数据目录或 zotero.sqlite。" = "No Zotero library was found in the default locations. Choose a data directory or zotero.sqlite.";
 "所选位置" = "Selected location";
 "找到多个 Zotero 文献库。请选择其一，或指定其他位置。" = "Several Zotero libraries were found. Choose one, or specify another location.";
-"已在本机找到 Zotero 文献库。请确认要关联的位置。" = "A Zotero library was found on this Mac. Confirm the location to link.";
+"已在本机找到 Zotero 文献库。请确认要关联的位置。" = "A Zotero library was found on this device. Confirm the location to link.";
 "将在默认数据目录和 Zotero 配置目录中查找文献库。" = "PaperFocus looks in the default data directory and Zotero profile locations.";
 "请选择 EndNote 导出的 XML 文件。其他 XML 或 EndNote 程序库文件不会被导入。" = "Choose an EndNote XML export. Other XML files and EndNote library packages are not imported.";
 "请选择 PaperFocus 文献库数据库或 paperfocus.library 文件。格式不符时不会替换当前文献库。" = "Choose a PaperFocus library database or a paperfocus.library file. A file that does not match is not opened, and the current library stays in place.";

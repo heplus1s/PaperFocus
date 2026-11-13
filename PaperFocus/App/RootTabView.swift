@@ -102,20 +102,16 @@ struct RootTabView: View {
             guard !hasPerformedStartupLinkedSync else { return }
             hasPerformedStartupLinkedSync = true
             Task {
-                #if os(macOS)
                 await adoptLocalZoteroIfNeeded()
-                #endif
                 guard libraryAutoSyncOnLaunch, hasLinkedLibrary else { return }
                 await refreshLinkedLibrariesSilently(reason: .launch)
             }
         }
-        #if os(macOS)
         .onChange(of: preferLocalZoteroLibrary) { _, isEnabled in
             guard isEnabled else { return }
             didAttemptZoteroAdopt = false
             Task { await adoptLocalZoteroIfNeeded() }
         }
-        #endif
         .sheet(isPresented: $showLibraryImportSheet) {
             LibraryImportModeSheet(initialMode: libraryImportMode) { urls in
                 _ = try await libraryImportService.importStandalonePDFs(from: urls, into: modelContext)
@@ -221,6 +217,34 @@ struct RootTabView: View {
         }
     }
 
+    private func adoptLocalZoteroIfNeeded() async {
+        guard !didAttemptZoteroAdopt else { return }
+        didAttemptZoteroAdopt = true
+        guard preferLocalZoteroLibrary else { return }
+        guard zoteroLinkedDisplayPath.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
+
+        let matches = await Task.detached(priority: .userInitiated) {
+            ZoteroLibraryLocator.candidates()
+        }.value
+
+        if matches.count > 1 {
+            showLibrarySyncNotice(AppSettings.localizedString("找到多个 Zotero 文献库。请在导入时选择要关联的文献库。"))
+            return
+        }
+
+        guard let match = matches.first else { return }
+        do {
+            let result = try await libraryImportService.linkZoteroLibrary(from: match.rootURL, into: modelContext)
+            zoteroLinkedDisplayPath = result.rootURL.path
+            zoteroLinkedDisplayName = result.rootURL.lastPathComponent
+            showLibrarySyncNotice(AppSettings.localizedFormat("Zotero：%@", defaultValue: "Zotero: %@", result.summary.syncMessage))
+        } catch {
+            showLibrarySyncNotice(
+                AppSettings.localizedFormat("Zotero 操作失败：%@", defaultValue: "Zotero failed: %@", error.localizedDescription)
+            )
+        }
+    }
+
     #if os(macOS)
     private func handleLibraryMenuCommand(_ command: AppMenuLibraryCommand) {
         switch command {
@@ -285,34 +309,6 @@ struct RootTabView: View {
         case .importPDFFolder:
             libraryImportMode = .pdfFolder
             showLibraryImportSheet = true
-        }
-    }
-
-    private func adoptLocalZoteroIfNeeded() async {
-        guard !didAttemptZoteroAdopt else { return }
-        didAttemptZoteroAdopt = true
-        guard preferLocalZoteroLibrary else { return }
-        guard zoteroLinkedDisplayPath.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
-
-        let matches = await Task.detached(priority: .userInitiated) {
-            ZoteroLibraryLocator.candidates()
-        }.value
-
-        if matches.count > 1 {
-            showLibrarySyncNotice(AppSettings.localizedString("找到多个 Zotero 文献库。请在导入时选择要关联的文献库。"))
-            return
-        }
-
-        guard let match = matches.first else { return }
-        do {
-            let result = try await libraryImportService.linkZoteroLibrary(from: match.rootURL, into: modelContext)
-            zoteroLinkedDisplayPath = result.rootURL.path
-            zoteroLinkedDisplayName = result.rootURL.lastPathComponent
-            showLibrarySyncNotice(AppSettings.localizedFormat("Zotero：%@", defaultValue: "Zotero: %@", result.summary.syncMessage))
-        } catch {
-            showLibrarySyncNotice(
-                AppSettings.localizedFormat("Zotero 操作失败：%@", defaultValue: "Zotero failed: %@", error.localizedDescription)
-            )
         }
     }
 

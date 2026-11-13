@@ -92,11 +92,6 @@ struct PaperFocusApp: App {
     }
 }
 
-#if os(macOS)
-private enum AppWindowID {
-    static let about = "about-paperfocus"
-}
-
 enum AppMenuLibraryCommand: String {
     case linkZotero
     case refreshZotero
@@ -111,6 +106,11 @@ enum AppMenuLibraryCommand: String {
 
 extension Notification.Name {
     static let appMenuLibraryCommand = Notification.Name("appMenuLibraryCommand")
+}
+
+#if os(macOS)
+private enum AppWindowID {
+    static let about = "about-paperfocus"
 }
 
 private struct PaperFocusMenuCommands: Commands {

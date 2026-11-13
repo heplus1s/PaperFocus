@@ -35,6 +35,7 @@ struct PaperDropZoneView: View {
 
             Button("选择导入方式", action: onRequestImport)
                 .buttonStyle(.bordered)
+                .frame(minHeight: 44)
                 .disabled(isImporting)
 
             if isImporting {
