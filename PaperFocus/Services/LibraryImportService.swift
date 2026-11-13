@@ -670,7 +670,7 @@ final class LibraryImportService {
         copyAttachmentsToLibrary: Bool
     ) {
         paper.uuid = paper.uuid.isEmpty ? UUID().uuidString : paper.uuid
-        assign(&paper.citationKey, value: firstNonEmpty([record.citationKey, makeCitationKey(authors: record.authors, title: record.title, year: record.year)]), preferExisting: preferExistingContent)
+        assign(&paper.citationKey, value: Self.firstNonEmpty([record.citationKey, makeCitationKey(authors: record.authors, title: record.title, year: record.year)]), preferExisting: preferExistingContent)
         assign(&paper.itemType, value: record.itemType, preferExisting: preferExistingContent)
         assign(&paper.title, value: record.title, preferExisting: preferExistingContent)
         assign(&paper.subtitle, value: record.subtitle, preferExisting: preferExistingContent)
@@ -1624,7 +1624,7 @@ final class LibraryImportService {
         }
 
         if let accessURL = SecurityScopedBookmarkStore.shared.resolveURL(for: .zoteroLocal) {
-            return try resolveZoteroLibraryRoot(from: accessURL)
+            return try Self.resolveZoteroLibraryRoot(from: accessURL)
         }
 
         throw LibraryImportError.invalidZoteroLibrary

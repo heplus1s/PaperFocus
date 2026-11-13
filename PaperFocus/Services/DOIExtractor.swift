@@ -13,7 +13,7 @@
 import Foundation
 
 nonisolated enum DOIExtractor {
-    nonisolated(unsafe) private static let doiPattern = try? NSRegularExpression(
+    private static let doiPattern = try? NSRegularExpression(
         pattern: #"10\.\d{4,9}/[-._;()/:A-Z0-9]+"#,
         options: [.caseInsensitive]
     )
