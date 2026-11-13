@@ -35,7 +35,7 @@ final class CrossrefService {
             throw CrossrefServiceError.invalidURL
         }
 
-        let (data, response) = try await URLSession.shared.data(from: url)
+        let (data, response) = try await Self.data(from: url)
 
         guard let httpResponse = response as? HTTPURLResponse,
               200..<300 ~= httpResponse.statusCode else {
@@ -54,7 +54,7 @@ final class CrossrefService {
             throw CrossrefServiceError.invalidURL
         }
 
-        let (data, response) = try await URLSession.shared.data(from: url)
+        let (data, response) = try await Self.data(from: url)
 
         guard let httpResponse = response as? HTTPURLResponse,
               200..<300 ~= httpResponse.statusCode else {
@@ -71,7 +71,7 @@ final class CrossrefService {
     }
 
     private func mapWorkToMetadata(_ work: CrossrefWork) -> PaperMetadata {
-        let title = work.title.first?.trimmingCharacters(in: .whitespacesAndNewlines) ?? "未知标题"
+        let title = work.title?.first?.trimmingCharacters(in: .whitespacesAndNewlines) ?? "未知标题"
 
         let authors = work.author?
             .map { author in
@@ -88,7 +88,7 @@ final class CrossrefService {
             ?? work.publishedOnline?.dateParts.first?.first
             ?? work.issued?.dateParts.first?.first
 
-        let journal = work.containerTitle.first?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        let journal = work.containerTitle?.first?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
         let publisher = work.publisher?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
         let volume = work.volume?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
         let issue = work.issue?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
@@ -175,6 +175,13 @@ final class CrossrefService {
         }
     }
 
+    private static func data(from url: URL) async throws -> (Data, URLResponse) {
+        var request = URLRequest(url: url)
+        request.timeoutInterval = 20
+        request.setValue("PaperFocus", forHTTPHeaderField: "User-Agent")
+        return try await URLSession.shared.data(for: request)
+    }
+
     private func mapCrossrefType(_ rawType: String) -> String {
         switch rawType {
         case "journal-article":
@@ -209,8 +216,8 @@ private struct CrossrefSearchMessage: Decodable {
 
 private struct CrossrefWork: Decodable {
     let DOI: String
-    let title: [String]
-    let containerTitle: [String]
+    let title: [String]?
+    let containerTitle: [String]?
     let author: [CrossrefAuthor]?
     let issued: CrossrefDateParts?
 

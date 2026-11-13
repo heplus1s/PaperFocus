@@ -96,9 +96,7 @@ struct RootTabView: View {
 
             guard libraryAutoSyncOnLaunch, hasLinkedLibrary else { return }
             Task {
-                await MainActor.run {
-                    refreshLinkedLibrariesSilently(reason: .launch)
-                }
+                await refreshLinkedLibrariesSilently(reason: .launch)
             }
         }
         .task(id: autoRefreshTaskID) {
@@ -109,9 +107,7 @@ struct RootTabView: View {
                 try? await Task.sleep(nanoseconds: seconds)
                 guard !Task.isCancelled else { return }
 
-                await MainActor.run {
-                    refreshLinkedLibrariesSilently(reason: .scheduled)
-                }
+                await refreshLinkedLibrariesSilently(reason: .scheduled)
             }
         }
         .overlay(alignment: .bottomTrailing) {
@@ -144,19 +140,19 @@ struct RootTabView: View {
         case scheduled
     }
 
-    private func refreshLinkedLibrariesSilently(reason: LibrarySyncTrigger) {
+    private func refreshLinkedLibrariesSilently(reason: LibrarySyncTrigger) async {
         guard hasLinkedLibrary else { return }
 
         do {
             var messages: [String] = []
 
             if !zoteroLinkedDisplayPath.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                let summary = try libraryImportService.refreshLinkedZoteroLibrary(into: modelContext)
+                let summary = try await libraryImportService.refreshLinkedZoteroLibrary(into: modelContext)
                 messages.append(AppSettings.localizedFormat("Zotero：%@", defaultValue: "Zotero: %@", summary.syncMessage))
             }
 
             if !endNoteLinkedDisplayPath.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                let summary = try libraryImportService.refreshLinkedEndNoteXML(
+                let summary = try await libraryImportService.refreshLinkedEndNoteXML(
                     from: endNoteLinkedDisplayPath,
                     into: modelContext
                 )
@@ -210,26 +206,30 @@ struct RootTabView: View {
                 prompt: AppSettings.localizedString("关联 Zotero")
             ) else { return }
 
-            do {
-                let result = try libraryImportService.linkZoteroLibrary(from: url, into: modelContext)
-                zoteroLinkedDisplayPath = result.rootURL.path
-                zoteroLinkedDisplayName = result.rootURL.lastPathComponent
-                showLibrarySyncNotice(AppSettings.localizedFormat("Zotero：%@", defaultValue: "Zotero: %@", result.summary.syncMessage))
-            } catch {
-                showLibrarySyncNotice(
-                    AppSettings.localizedFormat("Zotero 操作失败：%@", defaultValue: "Zotero failed: %@", error.localizedDescription)
-                )
+            Task {
+                do {
+                    let result = try await libraryImportService.linkZoteroLibrary(from: url, into: modelContext)
+                    zoteroLinkedDisplayPath = result.rootURL.path
+                    zoteroLinkedDisplayName = result.rootURL.lastPathComponent
+                    showLibrarySyncNotice(AppSettings.localizedFormat("Zotero：%@", defaultValue: "Zotero: %@", result.summary.syncMessage))
+                } catch {
+                    showLibrarySyncNotice(
+                        AppSettings.localizedFormat("Zotero 操作失败：%@", defaultValue: "Zotero failed: %@", error.localizedDescription)
+                    )
+                }
             }
 
         case .refreshZotero:
             guard !zoteroLinkedDisplayPath.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
-            do {
-                let summary = try libraryImportService.refreshLinkedZoteroLibrary(into: modelContext)
-                showLibrarySyncNotice(AppSettings.localizedFormat("Zotero：%@", defaultValue: "Zotero: %@", summary.syncMessage))
-            } catch {
-                showLibrarySyncNotice(
-                    AppSettings.localizedFormat("Zotero 操作失败：%@", defaultValue: "Zotero failed: %@", error.localizedDescription)
-                )
+            Task {
+                do {
+                    let summary = try await libraryImportService.refreshLinkedZoteroLibrary(into: modelContext)
+                    showLibrarySyncNotice(AppSettings.localizedFormat("Zotero：%@", defaultValue: "Zotero: %@", summary.syncMessage))
+                } catch {
+                    showLibrarySyncNotice(
+                        AppSettings.localizedFormat("Zotero 操作失败：%@", defaultValue: "Zotero failed: %@", error.localizedDescription)
+                    )
+                }
             }
 
         case .unlinkZotero:
@@ -245,29 +245,33 @@ struct RootTabView: View {
                 contentTypes: [.xml]
             ) else { return }
 
-            do {
-                let summary = try libraryImportService.linkEndNoteXML(from: url, into: modelContext)
-                endNoteLinkedDisplayPath = url.path
-                endNoteLinkedDisplayName = url.lastPathComponent
-                showLibrarySyncNotice(AppSettings.localizedFormat("EndNote：%@", defaultValue: "EndNote: %@", summary.syncMessage))
-            } catch {
-                showLibrarySyncNotice(
-                    AppSettings.localizedFormat("EndNote 操作失败：%@", defaultValue: "EndNote failed: %@", error.localizedDescription)
-                )
+            Task {
+                do {
+                    let summary = try await libraryImportService.linkEndNoteXML(from: url, into: modelContext)
+                    endNoteLinkedDisplayPath = url.path
+                    endNoteLinkedDisplayName = url.lastPathComponent
+                    showLibrarySyncNotice(AppSettings.localizedFormat("EndNote：%@", defaultValue: "EndNote: %@", summary.syncMessage))
+                } catch {
+                    showLibrarySyncNotice(
+                        AppSettings.localizedFormat("EndNote 操作失败：%@", defaultValue: "EndNote failed: %@", error.localizedDescription)
+                    )
+                }
             }
 
         case .refreshEndNote:
             guard !endNoteLinkedDisplayPath.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
-            do {
-                let summary = try libraryImportService.refreshLinkedEndNoteXML(
-                    from: endNoteLinkedDisplayPath,
-                    into: modelContext
-                )
-                showLibrarySyncNotice(AppSettings.localizedFormat("EndNote：%@", defaultValue: "EndNote: %@", summary.syncMessage))
-            } catch {
-                showLibrarySyncNotice(
-                    AppSettings.localizedFormat("EndNote 操作失败：%@", defaultValue: "EndNote failed: %@", error.localizedDescription)
-                )
+            Task {
+                do {
+                    let summary = try await libraryImportService.refreshLinkedEndNoteXML(
+                        from: endNoteLinkedDisplayPath,
+                        into: modelContext
+                    )
+                    showLibrarySyncNotice(AppSettings.localizedFormat("EndNote：%@", defaultValue: "EndNote: %@", summary.syncMessage))
+                } catch {
+                    showLibrarySyncNotice(
+                        AppSettings.localizedFormat("EndNote 操作失败：%@", defaultValue: "EndNote failed: %@", error.localizedDescription)
+                    )
+                }
             }
 
         case .unlinkEndNote:
@@ -283,13 +287,15 @@ struct RootTabView: View {
                 contentTypes: [.json]
             ) else { return }
 
-            do {
-                let summary = try libraryImportService.importZotero(from: url, into: modelContext)
-                showLibrarySyncNotice(summary.importMessage)
-            } catch {
-                showLibrarySyncNotice(
-                    AppSettings.localizedFormat("导入 Zotero JSON 失败：%@", defaultValue: "Import Zotero JSON failed: %@", error.localizedDescription)
-                )
+            Task {
+                do {
+                    let summary = try await libraryImportService.importZotero(from: url, into: modelContext)
+                    showLibrarySyncNotice(summary.importMessage)
+                } catch {
+                    showLibrarySyncNotice(
+                        AppSettings.localizedFormat("导入 Zotero JSON 失败：%@", defaultValue: "Import Zotero JSON failed: %@", error.localizedDescription)
+                    )
+                }
             }
 
         case .importEndNoteXML:
@@ -299,13 +305,15 @@ struct RootTabView: View {
                 contentTypes: [.xml]
             ) else { return }
 
-            do {
-                let summary = try libraryImportService.importEndNoteXML(from: url, into: modelContext)
-                showLibrarySyncNotice(summary.importMessage)
-            } catch {
-                showLibrarySyncNotice(
-                    AppSettings.localizedFormat("导入 EndNote XML 失败：%@", defaultValue: "Import EndNote XML failed: %@", error.localizedDescription)
-                )
+            Task {
+                do {
+                    let summary = try await libraryImportService.importEndNoteXML(from: url, into: modelContext)
+                    showLibrarySyncNotice(summary.importMessage)
+                } catch {
+                    showLibrarySyncNotice(
+                        AppSettings.localizedFormat("导入 EndNote XML 失败：%@", defaultValue: "Import EndNote XML failed: %@", error.localizedDescription)
+                    )
+                }
             }
 
         case .importPDFFolder:
@@ -314,13 +322,15 @@ struct RootTabView: View {
                 prompt: AppSettings.localizedString("导入文件夹")
             ) else { return }
 
-            do {
-                let summary = try libraryImportService.importPDFFolder(from: url, into: modelContext)
-                showLibrarySyncNotice(summary.importMessage)
-            } catch {
-                showLibrarySyncNotice(
-                    AppSettings.localizedFormat("导入 PDF 文件夹失败：%@", defaultValue: "Import PDF folder failed: %@", error.localizedDescription)
-                )
+            Task {
+                do {
+                    let summary = try await libraryImportService.importPDFFolder(from: url, into: modelContext)
+                    showLibrarySyncNotice(summary.importMessage)
+                } catch {
+                    showLibrarySyncNotice(
+                        AppSettings.localizedFormat("导入 PDF 文件夹失败：%@", defaultValue: "Import PDF folder failed: %@", error.localizedDescription)
+                    )
+                }
             }
         }
     }
@@ -999,29 +1009,32 @@ private struct MacLinkedLibrarySidebarPanel: View {
         guard hasLinkedLibrary, !isRefreshingLinkedLibrary else { return }
 
         isRefreshingLinkedLibrary = true
-        defer { isRefreshingLinkedLibrary = false }
 
-        do {
-            var messages: [String] = []
+        Task {
+            defer { isRefreshingLinkedLibrary = false }
 
-            if !zoteroLinkedDisplayPath.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                let summary = try libraryImportService.refreshLinkedZoteroLibrary(into: modelContext)
-                messages.append(AppSettings.localizedFormat("Zotero：%@", defaultValue: "Zotero: %@", summary.syncMessage))
+            do {
+                var messages: [String] = []
+
+                if !zoteroLinkedDisplayPath.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                    let summary = try await libraryImportService.refreshLinkedZoteroLibrary(into: modelContext)
+                    messages.append(AppSettings.localizedFormat("Zotero：%@", defaultValue: "Zotero: %@", summary.syncMessage))
+                }
+
+                if !endNoteLinkedDisplayPath.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                    let summary = try await libraryImportService.refreshLinkedEndNoteXML(
+                        from: endNoteLinkedDisplayPath,
+                        into: modelContext
+                    )
+                    messages.append(AppSettings.localizedFormat("EndNote：%@", defaultValue: "EndNote: %@", summary.syncMessage))
+                }
+
+                panelMessage = messages.joined(separator: "\n")
+                showPanelAlert = !panelMessage.isEmpty
+            } catch {
+                panelMessage = error.localizedDescription
+                showPanelAlert = true
             }
-
-            if !endNoteLinkedDisplayPath.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                let summary = try libraryImportService.refreshLinkedEndNoteXML(
-                    from: endNoteLinkedDisplayPath,
-                    into: modelContext
-                )
-                messages.append(AppSettings.localizedFormat("EndNote：%@", defaultValue: "EndNote: %@", summary.syncMessage))
-            }
-
-            panelMessage = messages.joined(separator: "\n")
-            showPanelAlert = !panelMessage.isEmpty
-        } catch {
-            panelMessage = error.localizedDescription
-            showPanelAlert = true
         }
     }
 
@@ -1031,15 +1044,17 @@ private struct MacLinkedLibrarySidebarPanel: View {
             prompt: AppSettings.localizedString("关联 Zotero")
         ) else { return }
 
-        do {
-            let result = try libraryImportService.linkZoteroLibrary(from: url, into: modelContext)
-            zoteroLinkedDisplayPath = result.rootURL.path
-            zoteroLinkedDisplayName = result.rootURL.lastPathComponent
-            panelMessage = result.summary.syncMessage
-            showPanelAlert = true
-        } catch {
-            panelMessage = error.localizedDescription
-            showPanelAlert = true
+        Task {
+            do {
+                let result = try await libraryImportService.linkZoteroLibrary(from: url, into: modelContext)
+                zoteroLinkedDisplayPath = result.rootURL.path
+                zoteroLinkedDisplayName = result.rootURL.lastPathComponent
+                panelMessage = result.summary.syncMessage
+                showPanelAlert = true
+            } catch {
+                panelMessage = error.localizedDescription
+                showPanelAlert = true
+            }
         }
     }
 
@@ -1050,15 +1065,17 @@ private struct MacLinkedLibrarySidebarPanel: View {
             contentTypes: [.xml]
         ) else { return }
 
-        do {
-            let summary = try libraryImportService.linkEndNoteXML(from: url, into: modelContext)
-            endNoteLinkedDisplayPath = url.path
-            endNoteLinkedDisplayName = url.lastPathComponent
-            panelMessage = summary.syncMessage
-            showPanelAlert = true
-        } catch {
-            panelMessage = error.localizedDescription
-            showPanelAlert = true
+        Task {
+            do {
+                let summary = try await libraryImportService.linkEndNoteXML(from: url, into: modelContext)
+                endNoteLinkedDisplayPath = url.path
+                endNoteLinkedDisplayName = url.lastPathComponent
+                panelMessage = summary.syncMessage
+                showPanelAlert = true
+            } catch {
+                panelMessage = error.localizedDescription
+                showPanelAlert = true
+            }
         }
     }
 

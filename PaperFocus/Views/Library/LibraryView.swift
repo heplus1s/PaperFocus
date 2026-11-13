@@ -107,8 +107,6 @@ struct LibraryView: View {
     private var zoteroLinkedDisplayPath: String = AppSettings.defaultLinkedLibraryDisplayPath
     @AppStorage(AppSettings.endNoteLinkedDisplayPathKey)
     private var endNoteLinkedDisplayPath: String = AppSettings.defaultLinkedLibraryDisplayPath
-    @AppStorage(AppSettings.libraryAutoSyncOnLaunchKey)
-    private var libraryAutoSyncOnLaunch: Bool = AppSettings.defaultLibraryAutoSyncOnLaunch
 
     @State private var isGeneratingSummary = false
     @State private var summaryText = ""
@@ -944,9 +942,10 @@ struct LibraryView: View {
             hasAttemptedInitialLinkedSync = true
             return
         }
-        guard force || !hasAttemptedInitialLinkedSync else { return }
 
-        if !force && libraryAutoSyncOnLaunch {
+        // Launch and interval syncs belong to the root view, which honors the
+        // user's auto-sync setting. This view only reloads after the linked path changes.
+        guard force else {
             hasAttemptedInitialLinkedSync = true
             return
         }
@@ -960,32 +959,34 @@ struct LibraryView: View {
         isRefreshingLinkedLibrary = true
         hasAttemptedInitialLinkedSync = true
 
-        do {
-            var messages: [String] = []
+        Task {
+            defer { isRefreshingLinkedLibrary = false }
 
-            if !zoteroLinkedDisplayPath.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                let summary = try libraryImportService.refreshLinkedZoteroLibrary(into: modelContext)
-                messages.append(AppSettings.localizedFormat("Zotero：%@", defaultValue: "Zotero: %@", summary.syncMessage))
-            }
+            do {
+                var messages: [String] = []
 
-            if !endNoteLinkedDisplayPath.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                let summary = try libraryImportService.refreshLinkedEndNoteXML(
-                    from: endNoteLinkedDisplayPath,
-                    into: modelContext
-                )
-                messages.append(AppSettings.localizedFormat("EndNote：%@", defaultValue: "EndNote: %@", summary.syncMessage))
-            }
+                if !zoteroLinkedDisplayPath.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                    let summary = try await libraryImportService.refreshLinkedZoteroLibrary(into: modelContext)
+                    messages.append(AppSettings.localizedFormat("Zotero：%@", defaultValue: "Zotero: %@", summary.syncMessage))
+                }
 
-            refreshPapersFromStore()
-            if !messages.isEmpty {
-                showLibrarySyncHint(messages.joined(separator: "；"))
+                if !endNoteLinkedDisplayPath.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                    let summary = try await libraryImportService.refreshLinkedEndNoteXML(
+                        from: endNoteLinkedDisplayPath,
+                        into: modelContext
+                    )
+                    messages.append(AppSettings.localizedFormat("EndNote：%@", defaultValue: "EndNote: %@", summary.syncMessage))
+                }
+
+                refreshPapersFromStore()
+                if !messages.isEmpty {
+                    showLibrarySyncHint(messages.joined(separator: "；"))
+                }
+            } catch {
+                errorMessage = AppSettings.localizedFormat("同步本地文献库失败：%@", defaultValue: "Sync library failed: %@", error.localizedDescription)
+                showErrorAlert = true
             }
-        } catch {
-            errorMessage = AppSettings.localizedFormat("同步本地文献库失败：%@", defaultValue: "Sync library failed: %@", error.localizedDescription)
-            showErrorAlert = true
         }
-
-        isRefreshingLinkedLibrary = false
     }
 
     private func showLibrarySyncHint(_ message: String) {
@@ -1020,9 +1021,11 @@ struct LibraryView: View {
 
         Task {
             do {
-                let extractedText = await MainActor.run {
+                let accessHandle = SecurityScopedBookmarkStore.shared.beginAccess(forExternalFile: pdfURL)
+                defer { SecurityScopedBookmarkStore.shared.endAccess(accessHandle) }
+                let extractedText = await Task.detached(priority: .userInitiated) {
                     PDFTextExtractor.extractText(from: pdfURL, maxPages: 8)
-                }
+                }.value
 
                 let request = PaperSummaryRequest(
                     title: paper.displayTitle,
@@ -1172,11 +1175,9 @@ struct LibraryView: View {
 
         Task {
             do {
-                #if os(macOS)
-                let storedURL = url
-                #else
-                let storedURL = try PaperFileService.importPDFToLibrary(from: url)
-                #endif
+                let storedURL = try await Task.detached(priority: .userInitiated) {
+                    try PaperFileService.importPDFToLibrary(from: url)
+                }.value
                 let paperUUID = await MainActor.run { () -> String in
                     let fallbackTitle = storedURL.deletingPathExtension().lastPathComponent
                     let paper = Paper(
@@ -1191,11 +1192,7 @@ struct LibraryView: View {
 
                     paper.hasPDF = true
                     paper.pdfFileName = storedURL.lastPathComponent
-                    #if os(macOS)
-                    paper.importMethod = "finder"
-                    #else
-                    paper.importMethod = "picker"
-                    #endif
+                    paper.importMethod = "libraryCopy"
                     paper.databaseSource = "PDF"
                     paper.citationKey = makeCitationKey(
                         authors: paper.authors,

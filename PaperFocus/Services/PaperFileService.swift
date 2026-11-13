@@ -7,21 +7,21 @@
 
 import Foundation
 
-enum PaperFileServiceError: LocalizedError {
+nonisolated enum PaperFileServiceError: LocalizedError, Sendable {
     case cannotAccessSourceFile
-    case copyFailed
+    case copyFailed(String)
 
     var errorDescription: String? {
         switch self {
         case .cannotAccessSourceFile:
             return "无法访问源 PDF 文件。"
-        case .copyFailed:
-            return "复制 PDF 到应用目录失败。"
+        case .copyFailed(let message):
+            return message.isEmpty ? "复制 PDF 到应用目录失败。" : "复制 PDF 到应用目录失败：\(message)"
         }
     }
 }
 
-enum PaperFileService {
+nonisolated enum PaperFileService {
     static func importPDFToLibrary(from sourceURL: URL) throws -> URL {
         let didAccess = sourceURL.startAccessingSecurityScopedResource()
         defer {
@@ -63,7 +63,7 @@ enum PaperFileService {
             try fileManager.copyItem(at: sourceURL, to: destinationURL)
             return destinationURL
         } catch {
-            throw PaperFileServiceError.copyFailed
+            throw PaperFileServiceError.copyFailed(error.localizedDescription)
         }
     }
 

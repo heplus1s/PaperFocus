@@ -87,7 +87,7 @@ final class SecurityScopedBookmarkStore {
             let rootPath = associatedRootPath(for: key) ?? rootURL.path
             let filePath = standardizedFileURL.path
 
-            if filePath == rootPath || filePath.hasPrefix(rootPath + "/") {
+            if Self.path(filePath, isInside: rootPath) {
                 return beginAccess(toRootURL: rootURL)
             }
         }
@@ -132,5 +132,15 @@ final class SecurityScopedBookmarkStore {
 
     private func associatedRootPathKey(for key: LinkedLibraryBookmarkKey) -> String {
         "\(key.rawValue).rootPath"
+    }
+
+    private static func path(_ filePath: String, isInside rootPath: String) -> Bool {
+        let file = URL(fileURLWithPath: filePath).resolvingSymlinksInPath().standardizedFileURL.path
+        let root = URL(fileURLWithPath: rootPath).resolvingSymlinksInPath().standardizedFileURL.path
+        if file == root {
+            return true
+        }
+        let prefix = root.hasSuffix("/") ? root : root + "/"
+        return file.hasPrefix(prefix)
     }
 }

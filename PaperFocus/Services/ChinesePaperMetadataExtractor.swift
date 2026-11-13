@@ -5,7 +5,7 @@
 
 import Foundation
 
-enum ChinesePaperMetadataExtractor {
+nonisolated enum ChinesePaperMetadataExtractor {
     static func extractMetadata(from text: String) -> PaperMetadata? {
         let lines = normalizedLines(from: text)
         guard !lines.isEmpty else { return nil }

@@ -67,63 +67,6 @@
 			);
 			target = BCAD720D2F79755900C2F253 /* PaperFocusWidgetsExtension */;
 		};
-		BCAD72352F79813300C2F253 /* Exceptions for "PaperFocus" folder in "PaperFocus" target */ = {
-			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
-			membershipExceptions = (
-				App/AppNavigationState.swift,
-				App/PaperFocusApp.swift,
-				App/RootTabView.swift,
-				Components/PaperCardView.swift,
-				Components/ResumeFocusToolbarButton.swift,
-				Components/SectionHeaderView.swift,
-				Components/TagChipView.swift,
-				Components/TimerCircleView.swift,
-				Models/FocusLiveActivityAttributes.swift,
-				Models/FocusTask.swift,
-				Models/Paper.swift,
-				Models/PaperMetadata.swift,
-				Models/PaperStatus.swift,
-				Models/ReadingNote.swift,
-				Models/ReadingSession.swift,
-				Models/Tag.swift,
-				Resources/AppConstants.swift,
-				Resources/AppSettings.swift,
-				Resources/Assets.xcassets,
-				Services/ChinesePaperMetadataExtractor.swift,
-				Services/CrossrefServices.swift,
-				Services/DOIExtractor.swift,
-				Services/FocusLiveActivityActionRouter.swift,
-				Services/FocusLiveActivityManager.swift,
-				Services/LibraryImportService.swift,
-				Services/PaperFileService.swift,
-				Services/PaperMetadataImporter.swift,
-				Services/PaperSummaryService.swift,
-				Services/PDFPicker.swift,
-				Services/PDFPreviewView.swift,
-				Services/PDFService.swift,
-				Services/PDFTextExtractor.swift,
-				Services/SampleDataService.swift,
-				Services/SecurityScopedBookmarkStore.swift,
-				Services/TimerService.swift,
-				ViewModels/HomeViewModel.swift,
-				ViewModels/LibraryViewModel.swift,
-				ViewModels/TimerViewModel.swift,
-				Views/Home/HomeView.swift,
-				Views/Library/AddPaperView.swift,
-				Views/Library/LibraryView.swift,
-				Views/Library/PaperDatailView.swift,
-				Views/Library/PaperDropZoneView.swift,
-				Views/Library/PaperInspectorView.swift,
-				Views/Session/SessionSummaryView.swift,
-				Views/Settings/AboutPaperFocusView.swift,
-				Views/Settings/SettingsView.swift,
-				Views/Timer/FloatingFocusTimerHUD.swift,
-				Views/Timer/FocusTimerView.swift,
-				Views/Timer/MacReadingAIDialogView.swift,
-				Views/Timer/SidebarFocusTimerView.swift,
-			);
-			target = BCD57FBC2F79378E00DFCB74 /* PaperFocus */;
-		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -137,9 +80,6 @@
 		};
 		BCD57E852F72E3CD00DFCB74 /* PaperFocus */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			exceptions = (
-				BCAD72352F79813300C2F253 /* Exceptions for "PaperFocus" folder in "PaperFocus" target */,
-			);
 			path = PaperFocus;
 			sourceTree = "<group>";
 		};
@@ -253,13 +193,15 @@
 				BCD57FB92F79378E00DFCB74 /* Sources */,
 				BCD57FBA2F79378E00DFCB74 /* Frameworks */,
 				BCD57FBB2F79378E00DFCB74 /* Resources */,
-				D1A7C0DE0A1B2C3D4E5F6001 /* Copy Localization Resources */,
 				BCAD72252F79755A00C2F253 /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
 				BCAD721F2F79755A00C2F253 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				BCD57E852F72E3CD00DFCB74 /* PaperFocus */,
 			);
 			name = PaperFocus;
 			packageProductDependencies = (
@@ -396,49 +338,6 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
-
-/* Begin PBXShellScriptBuildPhase section */
-		D1A7C0DE0A1B2C3D4E5F6001 /* Copy Localization Resources */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-			);
-			inputPaths = (
-				"$(SRCROOT)/PaperFocus/en.lproj/Localizable.strings",
-				"$(SRCROOT)/PaperFocus/zh-Hans.lproj/Localizable.strings",
-				"$(SRCROOT)/PaperFocus/zh-Hant.lproj/Localizable.strings",
-				"$(SRCROOT)/PaperFocus/ja.lproj/Localizable.strings",
-				"$(SRCROOT)/PaperFocus/ko.lproj/Localizable.strings",
-				"$(SRCROOT)/PaperFocus/fr.lproj/Localizable.strings",
-				"$(SRCROOT)/PaperFocus/de.lproj/Localizable.strings",
-				"$(SRCROOT)/PaperFocus/es.lproj/Localizable.strings",
-				"$(SRCROOT)/PaperFocus/it.lproj/Localizable.strings",
-				"$(SRCROOT)/PaperFocus/pt.lproj/Localizable.strings",
-				"$(SRCROOT)/PaperFocus/ru.lproj/Localizable.strings",
-			);
-			name = "Copy Localization Resources";
-			outputFileListPaths = (
-			);
-			outputPaths = (
-				"$(TARGET_BUILD_DIR)/$(UNLOCALIZED_RESOURCES_FOLDER_PATH)/en.lproj/Localizable.strings",
-				"$(TARGET_BUILD_DIR)/$(UNLOCALIZED_RESOURCES_FOLDER_PATH)/zh-Hans.lproj/Localizable.strings",
-				"$(TARGET_BUILD_DIR)/$(UNLOCALIZED_RESOURCES_FOLDER_PATH)/zh-Hant.lproj/Localizable.strings",
-				"$(TARGET_BUILD_DIR)/$(UNLOCALIZED_RESOURCES_FOLDER_PATH)/ja.lproj/Localizable.strings",
-				"$(TARGET_BUILD_DIR)/$(UNLOCALIZED_RESOURCES_FOLDER_PATH)/ko.lproj/Localizable.strings",
-				"$(TARGET_BUILD_DIR)/$(UNLOCALIZED_RESOURCES_FOLDER_PATH)/fr.lproj/Localizable.strings",
-				"$(TARGET_BUILD_DIR)/$(UNLOCALIZED_RESOURCES_FOLDER_PATH)/de.lproj/Localizable.strings",
-				"$(TARGET_BUILD_DIR)/$(UNLOCALIZED_RESOURCES_FOLDER_PATH)/es.lproj/Localizable.strings",
-				"$(TARGET_BUILD_DIR)/$(UNLOCALIZED_RESOURCES_FOLDER_PATH)/it.lproj/Localizable.strings",
-				"$(TARGET_BUILD_DIR)/$(UNLOCALIZED_RESOURCES_FOLDER_PATH)/pt.lproj/Localizable.strings",
-				"$(TARGET_BUILD_DIR)/$(UNLOCALIZED_RESOURCES_FOLDER_PATH)/ru.lproj/Localizable.strings",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "set -e\nRESOURCE_DIR=\"$TARGET_BUILD_DIR/$UNLOCALIZED_RESOURCES_FOLDER_PATH\"\nmkdir -p \"$RESOURCE_DIR\"\nfor file in \\\n  \"$SCRIPT_INPUT_FILE_0\" \\\n  \"$SCRIPT_INPUT_FILE_1\" \\\n  \"$SCRIPT_INPUT_FILE_2\" \\\n  \"$SCRIPT_INPUT_FILE_3\" \\\n  \"$SCRIPT_INPUT_FILE_4\" \\\n  \"$SCRIPT_INPUT_FILE_5\" \\\n  \"$SCRIPT_INPUT_FILE_6\" \\\n  \"$SCRIPT_INPUT_FILE_7\" \\\n  \"$SCRIPT_INPUT_FILE_8\" \\\n  \"$SCRIPT_INPUT_FILE_9\" \\\n  \"$SCRIPT_INPUT_FILE_10\"; do\n  [ -f \"$file\" ] || continue\n  base=$(basename \"$(dirname \"$file\")\")\n  mkdir -p \"$RESOURCE_DIR/$base\"\n  cp \"$file\" \"$RESOURCE_DIR/$base/Localizable.strings\"\ndone\n";
-		};
-/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		BCAD720A2F79755900C2F253 /* Sources */ = {
