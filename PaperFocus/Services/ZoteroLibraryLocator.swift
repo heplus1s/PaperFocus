@@ -181,6 +181,15 @@ nonisolated enum LiteratureLibraryKind: Sendable {
 
 nonisolated enum ZoteroLibraryLocator {
     static func candidates() -> [ZoteroLibraryCandidate] {
+        #if os(macOS)
+        return macOSCandidates()
+        #else
+        return []
+        #endif
+    }
+
+    #if os(macOS)
+    private static func macOSCandidates() -> [ZoteroLibraryCandidate] {
         let fileManager = FileManager.default
         let home = fileManager.homeDirectoryForCurrentUser
         var ordered: [(URL, String)] = []
@@ -216,7 +225,9 @@ nonisolated enum ZoteroLibraryLocator {
         }
         return results
     }
+    #endif
 
+    #if os(macOS)
     private static func profileDirectories(in support: URL, fileManager: FileManager) -> [URL] {
         var directories: [URL] = []
         let profilesFile = support.appendingPathComponent("profiles.ini")
@@ -294,6 +305,7 @@ nonisolated enum ZoteroLibraryLocator {
         guard !expanded.isEmpty else { return nil }
         return URL(fileURLWithPath: expanded, isDirectory: true)
     }
+    #endif
 }
 
 nonisolated enum ZoteroDatabaseValidator {

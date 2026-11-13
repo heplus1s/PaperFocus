@@ -18,8 +18,10 @@ final class SecurityScopedBookmarkStore {
     }
 
     private let userDefaults = UserDefaults.standard
+    private let grantedBookmarkDefaultsKey = "files.grantedResourceBookmarks"
     private var activeAccessCounts: [String: Int] = [:]
     private var activeURLs: [String: URL] = [:]
+    private var resolvedURLsByPath: [String: URL] = [:]
 
     private init() { }
 
@@ -79,6 +81,31 @@ final class SecurityScopedBookmarkStore {
         return beginAccess(toRootURL: url)
     }
 
+    func saveGrantedResource(at url: URL) {
+        let started = url.startAccessingSecurityScopedResource()
+        defer {
+            if started {
+                url.stopAccessingSecurityScopedResource()
+            }
+        }
+
+        guard let data = try? url.bookmarkData(
+            options: [.withSecurityScope],
+            includingResourceValuesForKeys: nil,
+            relativeTo: nil
+        ) else {
+            return
+        }
+
+        var bookmarks = loadGrantedBookmarks()
+        bookmarks[url.standardizedFileURL.path] = data
+        storeGrantedBookmarks(bookmarks)
+    }
+
+    func resolvedReadingURL(for fileURL: URL) -> URL {
+        resolvedURLsByPath[fileURL.standardizedFileURL.path] ?? fileURL
+    }
+
     func beginAccess(forExternalFile fileURL: URL) -> AccessHandle? {
         let standardizedFileURL = fileURL.standardizedFileURL
 
@@ -92,7 +119,11 @@ final class SecurityScopedBookmarkStore {
             }
         }
 
-        return nil
+        if let handle = beginAccessUsingGrantedBookmark(for: standardizedFileURL) {
+            return handle
+        }
+
+        return beginAccess(toRootURL: standardizedFileURL)
     }
 
     func endAccess(_ handle: AccessHandle?) {
@@ -132,6 +163,64 @@ final class SecurityScopedBookmarkStore {
 
     private func associatedRootPathKey(for key: LinkedLibraryBookmarkKey) -> String {
         "\(key.rawValue).rootPath"
+    }
+
+    private func loadGrantedBookmarks() -> [String: Data] {
+        guard let stored = userDefaults.dictionary(forKey: grantedBookmarkDefaultsKey) else {
+            return [:]
+        }
+        var bookmarks: [String: Data] = [:]
+        for (key, value) in stored {
+            if let data = value as? Data {
+                bookmarks[key] = data
+            }
+        }
+        return bookmarks
+    }
+
+    private func storeGrantedBookmarks(_ bookmarks: [String: Data]) {
+        userDefaults.set(bookmarks, forKey: grantedBookmarkDefaultsKey)
+    }
+
+    private func beginAccessUsingGrantedBookmark(for fileURL: URL) -> AccessHandle? {
+        let filePath = fileURL.standardizedFileURL.path
+        let bookmarks = loadGrantedBookmarks()
+        if let data = bookmarks[filePath],
+           let handle = beginAccess(bookmarkData: data, lookupPath: filePath, replacesReadingURL: true) {
+            return handle
+        }
+
+        let containingPaths = bookmarks.keys.filter { storedPath in
+            Self.path(filePath, isInside: storedPath)
+        }
+        guard let bestPath = containingPaths.max(by: { $0.count < $1.count }),
+              let data = bookmarks[bestPath] else {
+            return nil
+        }
+        return beginAccess(bookmarkData: data, lookupPath: filePath, replacesReadingURL: false)
+    }
+
+    private func beginAccess(bookmarkData: Data, lookupPath: String, replacesReadingURL: Bool) -> AccessHandle? {
+        var isStale = false
+        guard let resolved = try? URL(
+            resolvingBookmarkData: bookmarkData,
+            options: [.withSecurityScope],
+            relativeTo: nil,
+            bookmarkDataIsStale: &isStale
+        ) else {
+            return nil
+        }
+
+        if isStale {
+            saveGrantedResource(at: resolved)
+        }
+
+        if replacesReadingURL {
+            let resolvedPath = resolved.standardizedFileURL.path
+            resolvedURLsByPath[lookupPath] = resolved
+            resolvedURLsByPath[resolvedPath] = resolved
+        }
+        return beginAccess(toRootURL: resolved)
     }
 
     private static func path(_ filePath: String, isInside rootPath: String) -> Bool {

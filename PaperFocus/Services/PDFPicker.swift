@@ -26,7 +26,7 @@ struct PDFPickerRepresentable: UIViewControllerRepresentable {
     func makeUIViewController(context: Context) -> UIDocumentPickerViewController {
         let controller = UIDocumentPickerViewController(
             forOpeningContentTypes: [UTType.pdf],
-            asCopy: true
+            asCopy: false
         )
         controller.delegate = context.coordinator
         controller.allowsMultipleSelection = false
@@ -49,7 +49,7 @@ struct PDFPickerRepresentable: UIViewControllerRepresentable {
 
         func documentPicker(_ controller: UIDocumentPickerViewController, didPickDocumentsAt urls: [URL]) {
             guard let url = urls.first else { return }
-            print("PDFPicker picked:", url)
+            SecurityScopedBookmarkStore.shared.saveGrantedResource(at: url)
             onPick(url)
         }
 

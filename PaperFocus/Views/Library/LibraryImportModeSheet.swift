@@ -302,9 +302,13 @@ struct LibraryImportModeSheet: View {
     }
 
     private var copyPolicyText: String {
+        #if os(iOS)
+        AppSettings.localizedString("在 iPhone 和 iPad 上，将直接打开“文件”中的原始文件，不会复制到应用内。")
+        #else
         importCopiesAttachments
             ? AppSettings.localizedString("当前设置为在导入时复制附件。")
             : AppSettings.localizedString("当前设置为直接使用原始文件，不会生成副本。可在设置中更改。")
+        #endif
     }
 
     private var resolvedZoteroURL: URL? {
@@ -408,6 +412,9 @@ struct LibraryImportModeSheet: View {
             statusMessage = AppSettings.localizedString(error.localizedDescription)
         case .success(let urls):
             guard !urls.isEmpty else { return }
+            for url in urls {
+                SecurityScopedBookmarkStore.shared.saveGrantedResource(at: url)
+            }
             if mode == .pdfFiles {
                 run {
                     try await importPDFs(urls)

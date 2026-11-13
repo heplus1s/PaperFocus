@@ -95,7 +95,9 @@ struct AddPaperView: View {
                 }
                 .padding()
             }
+            #if os(macOS)
             .frame(minWidth: 460, minHeight: 420)
+            #endif
             .navigationTitle("新增文献")
         }
         .sheet(isPresented: $showPDFPicker) {

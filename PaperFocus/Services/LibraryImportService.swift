@@ -323,6 +323,7 @@ final class LibraryImportService {
                 rootURL.stopAccessingSecurityScopedResource()
             }
         }
+        SecurityScopedBookmarkStore.shared.saveGrantedResource(at: rootURL)
 
         let shouldCopy = AppSettings.importCopiesAttachments
         let records = try await Self.readOffMain {
@@ -341,6 +342,9 @@ final class LibraryImportService {
             for (url, didAccess) in zip(urls, accessFlags) where didAccess {
                 url.stopAccessingSecurityScopedResource()
             }
+        }
+        for url in urls {
+            SecurityScopedBookmarkStore.shared.saveGrantedResource(at: url)
         }
         let shouldCopy = AppSettings.importCopiesAttachments
         let records = try await Self.readOffMain {
@@ -876,6 +880,7 @@ final class LibraryImportService {
         if copyAttachmentsToLibrary {
             finalURL = (try? PaperFileService.importPDFToLibrary(from: url)) ?? url
         } else {
+            SecurityScopedBookmarkStore.shared.saveGrantedResource(at: url)
             finalURL = url
         }
         let fileManager = FileManager.default
@@ -1824,6 +1829,7 @@ final class LibraryImportService {
                 url.stopAccessingSecurityScopedResource()
             }
         }
+        SecurityScopedBookmarkStore.shared.saveGrantedResource(at: url)
 
         let kind = try await Self.readOffMain {
             LiteratureLibraryKind.detect(at: url)

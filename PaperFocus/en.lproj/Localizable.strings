@@ -615,6 +615,9 @@
 "在 iPhone 和 iPad 上，请使用系统文件选择器选择 Zotero 数据目录，或填写 API 密钥。此选项不会自动搜索 Mac 上的默认数据目录。关闭后，继续使用 PaperFocus 自己的文献库。" = "On iPhone and iPad, choose a Zotero data folder with the system file picker, or enter an API key. The default data directory on a Mac is not searched automatically. Turn this off to keep PaperFocus’s own library.";
 "在 iPhone 和 iPad 上，通过系统文件选择器关联 Zotero 或 EndNote。关闭“导入时复制附件”后，将直接打开原始文件。PaperFocus 保存阅读状态与摘要，不改写外部文献库。" = "On iPhone and iPad, link Zotero or EndNote with the system file picker. When attachment copying is off, original files are opened directly. PaperFocus stores reading state and summaries and does not modify the external library.";
 "在 iPhone 和 iPad 上，请使用系统文件选择器选择 Zotero 数据目录，或填写 API 密钥。不会自动搜索 Mac 上的默认数据目录。" = "On iPhone and iPad, choose a Zotero data folder with the system file picker, or enter an API key. The default data directory on a Mac is not searched automatically.";
+"在 iPhone 和 iPad 上，PaperFocus 直接打开“文件”中授权的原始 PDF，不会把文件复制到应用内。" = "On iPhone and iPad, PaperFocus opens the original PDF you authorize in Files and does not copy it into the app.";
+"在 iPhone 和 iPad 上，将直接打开“文件”中的原始文件，不会复制到应用内。" = "On iPhone and iPad, original files in Files are opened directly and are not copied into the app.";
+"在 iPhone 和 iPad 上，PaperFocus 直接打开“文件”中的原始 PDF，不会复制到应用内。" = "On iPhone and iPad, PaperFocus opens the original PDF in Files and does not copy it into the app.";
 "未在此设备上找到可直接读取的 Zotero 文献库。请选择数据目录或 zotero.sqlite，或填写 API 密钥。" = "No Zotero library on this device can be read directly. Choose a data directory or zotero.sqlite, or enter an API key.";
 "未在默认位置找到 Zotero 文献库。请选择数据目录或 zotero.sqlite。" = "No Zotero library was found in the default locations. Choose a data directory or zotero.sqlite.";
 "如果只是临时迁移文献或导入历史 PDF，可以继续使用一次性导入。" = "For a one-time migration or a set of existing PDFs, use one-time import.";

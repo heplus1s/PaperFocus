@@ -217,8 +217,12 @@ struct SettingsView: View {
                 Toggle("仅使用 Zotero 文献库", isOn: $zoteroSoleLibrary)
                 settingsHint("开启后，文献列表只显示已关联的 Zotero 文献，并暂停使用应用内文献库。已保存的应用内条目不会被删除，关闭此选项后会重新显示。")
 
+                #if os(iOS)
+                settingsHint("在 iPhone 和 iPad 上，PaperFocus 直接打开“文件”中授权的原始 PDF，不会把文件复制到应用内。")
+                #else
                 Toggle("导入时复制附件", isOn: $importCopiesAttachments)
                 settingsHint("关闭时，直接打开 Zotero 文献库中的原始附件，不在 PaperFocus 中生成副本。开启时，导入过程可以将附件复制到应用目录。")
+                #endif
 
                 SecureField("Zotero API 密钥", text: $zoteroAccountAPIKey)
                 settingsHint("账户关联使用 Zotero 网站生成的 API 密钥。密钥仅保存在本机设置中。")

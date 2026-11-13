@@ -267,6 +267,7 @@ struct LibraryView: View {
                             finalPDFPath = importedURL.path
                             finalPDFFileName = importedURL.lastPathComponent
                         } else {
+                            SecurityScopedBookmarkStore.shared.saveGrantedResource(at: sourceURL)
                             finalPDFPath = sourceURL.path
                             finalPDFFileName = sourceURL.lastPathComponent
                         }
@@ -1124,9 +1125,10 @@ struct LibraryView: View {
         Task {
             do {
                 let accessHandle = SecurityScopedBookmarkStore.shared.beginAccess(forExternalFile: pdfURL)
+                let readURL = SecurityScopedBookmarkStore.shared.resolvedReadingURL(for: pdfURL)
                 defer { SecurityScopedBookmarkStore.shared.endAccess(accessHandle) }
                 let extractedText = await Task.detached(priority: .userInitiated) {
-                    PDFTextExtractor.extractText(from: pdfURL, maxPages: 8)
+                    PDFTextExtractor.extractText(from: readURL, maxPages: 8)
                 }.value
 
                 let request = PaperSummaryRequest(
@@ -1286,6 +1288,7 @@ struct LibraryView: View {
                 try PaperFileService.importPDFToLibrary(from: url)
             }.value
         } else {
+            SecurityScopedBookmarkStore.shared.saveGrantedResource(at: url)
             storedURL = url
         }
 
@@ -1402,6 +1405,9 @@ struct LibraryView: View {
     }
 
     private func handleDroppedFiles(_ urls: [URL]) {
+        for url in urls {
+            SecurityScopedBookmarkStore.shared.saveGrantedResource(at: url)
+        }
         Task {
             var pdfs: [URL] = []
             var libraryURL: URL?

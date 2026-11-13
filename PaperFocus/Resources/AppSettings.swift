@@ -140,7 +140,11 @@ enum AppSettings {
     }
 
     static var importCopiesAttachments: Bool {
+        #if os(iOS)
+        false
+        #else
         boolPreference(importCopiesAttachmentsKey, defaultValue: defaultImportCopiesAttachments)
+        #endif
     }
 
     static var zoteroLinkKind: String {

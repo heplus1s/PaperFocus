@@ -10,6 +10,7 @@ import Foundation
 nonisolated enum PaperFileServiceError: LocalizedError, Sendable {
     case cannotAccessSourceFile
     case copyFailed(String)
+    case copyUnavailableOnIOS
 
     var errorDescription: String? {
         switch self {
@@ -17,12 +18,18 @@ nonisolated enum PaperFileServiceError: LocalizedError, Sendable {
             return "无法访问源 PDF 文件。"
         case .copyFailed(let message):
             return message.isEmpty ? "复制 PDF 到应用目录失败。" : "复制 PDF 到应用目录失败：\(message)"
+        case .copyUnavailableOnIOS:
+            return "在 iPhone 和 iPad 上，PaperFocus 直接打开“文件”中的原始 PDF，不会复制到应用内。"
         }
     }
 }
 
 nonisolated enum PaperFileService {
     static func importPDFToLibrary(from sourceURL: URL) throws -> URL {
+        #if os(iOS)
+        _ = sourceURL
+        throw PaperFileServiceError.copyUnavailableOnIOS
+        #else
         let didAccess = sourceURL.startAccessingSecurityScopedResource()
         defer {
             if didAccess {
@@ -65,8 +72,10 @@ nonisolated enum PaperFileService {
         } catch {
             throw PaperFileServiceError.copyFailed(error.localizedDescription)
         }
+        #endif
     }
 
+    #if os(macOS)
     private static func sanitizeFileName(_ name: String) -> String {
         let invalid = CharacterSet(charactersIn: "/:\\?%*|\"<>")
         let cleaned = name
@@ -76,4 +85,5 @@ nonisolated enum PaperFileService {
 
         return cleaned.isEmpty ? "Paper" : cleaned
     }
+    #endif
 }
