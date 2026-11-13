@@ -67,4 +67,6 @@ EndNote 导入读取 EndNote 导出的 XML。EndNote 程序库文件（`.enl`）
 
 ## 许可协议
 
-本仓库采用 [PolyForm Noncommercial License 1.0.0](LICENSE)（非商业许可）。允许出于非商业目的使用、修改和分享本软件；未经事先许可，不得用于商业用途。如需商业授权，请在本仓库提交 issue。正式法律文本以英文 `LICENSE` 文件为准。
+本仓库中的源代码采用 [PolyForm Noncommercial License 1.0.0](LICENSE)（非商业许可）。允许出于非商业目的使用、修改和分享本软件；第三方未经事先许可，不得用于商业用途。如需商业授权，请在本仓库提交 issue。
+
+著作权人 The PaperFocus authors 保留以单独的商业条款许可和发行 PaperFocus 的权利，包括付费发布本应用。非商业许可的正式法律文本以英文 LICENSE 文件为准。

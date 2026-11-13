@@ -67,4 +67,6 @@ Paper summaries, translation, and Zotero account access use credentials that you
 
 ## License
 
-This repository is licensed under the [PolyForm Noncommercial License 1.0.0](LICENSE). You may use, modify, and share the software for noncommercial purposes. Commercial use is not allowed without prior permission. To request a commercial license, open an issue in this repository. The English `LICENSE` file is the legal text.
+The source code in this repository is licensed under the [PolyForm Noncommercial License 1.0.0](LICENSE). You may use, modify, and share the software for noncommercial purposes. Commercial use by third parties is not allowed without prior permission. To request a commercial license, open an issue in this repository.
+
+The copyright holders, The PaperFocus authors, reserve the right to license and distribute PaperFocus under separate commercial terms, including paid publication of the application. The English LICENSE file is the legal text of the noncommercial license.
