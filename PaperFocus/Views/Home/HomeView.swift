@@ -17,6 +17,8 @@ import SwiftData
 
 struct HomeView: View {
     @Query(sort: \Paper.createdAt, order: .reverse) private var papers: [Paper]
+    @AppStorage(AppSettings.zoteroSoleLibraryKey)
+    private var zoteroSoleLibrary = AppSettings.defaultZoteroSoleLibrary
     @Query(sort: \FocusTask.createdAt, order: .reverse) private var focusTasks: [FocusTask]
     @EnvironmentObject private var navigationState: AppNavigationState
 
@@ -51,8 +53,12 @@ struct HomeView: View {
         }
     }
 
+    private var catalogPapers: [Paper] {
+        zoteroSoleLibrary ? papers.filter { $0.sourceLibraryType == "zotero" } : papers
+    }
+
     private var totalPaperCount: Int {
-        papers.count
+        catalogPapers.count
     }
 
     private var shouldShowResumeToolbarButton: Bool {
@@ -281,11 +287,15 @@ struct HomeView: View {
 
     @ViewBuilder
     private var recentPapersContent: some View {
-        if papers.isEmpty {
-            Text("还没有文献，请先导入 PDF。")
+        if catalogPapers.isEmpty {
+            Text(LocalizedStringKey(
+                zoteroSoleLibrary
+                    ? "已停用应用内文献库。请关联 Zotero 文献库后查看条目。"
+                    : "还没有文献。请从文献库导入 PDF 或外部文献库。"
+            ))
                 .foregroundStyle(.secondary)
         } else {
-            ForEach(Array(papers.prefix(5))) { paper in
+            ForEach(Array(catalogPapers.prefix(5))) { paper in
                 VStack(alignment: .leading, spacing: 4) {
                     Text(paper.title.isEmpty ? AppSettings.localizedString("未命名文献") : paper.title)
                         .font(.headline)
@@ -313,7 +323,7 @@ struct HomeView: View {
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
 
-                if paper.persistentModelID != Array(papers.prefix(5)).last?.persistentModelID {
+                if paper.persistentModelID != Array(catalogPapers.prefix(5)).last?.persistentModelID {
                     Divider()
                 }
             }

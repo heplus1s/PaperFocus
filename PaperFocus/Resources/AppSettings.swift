@@ -78,6 +78,14 @@ enum AppSettings {
     static let endNoteLinkedDisplayNameKey = "library.link.endnote.displayName"
     static let libraryAutoSyncOnLaunchKey = "library.autoSyncOnLaunch"
     static let libraryAutoRefreshIntervalMinutesKey = "library.autoRefreshIntervalMinutes"
+    static let preferLocalZoteroLibraryKey = "library.preferLocalZotero"
+    static let zoteroSoleLibraryKey = "library.zoteroSoleLibrary"
+    static let importCopiesAttachmentsKey = "library.importCopiesAttachments"
+    static let zoteroLinkKindKey = "library.link.zotero.kind"
+    static let zoteroAccountAPIKey = "library.link.zotero.apiKey"
+    static let zoteroAccountUserIDKey = "library.link.zotero.userID"
+    static let zoteroAccountUsernameKey = "library.link.zotero.username"
+    static let paperFocusStoreRejectedKey = "library.paperfocus.storeRejected"
 
     static let defaultFocusMinutes = 25
     static let defaultBreakMinutes = 5
@@ -118,7 +126,45 @@ enum AppSettings {
     static let defaultLinkedLibraryDisplayName = ""
     static let defaultLibraryAutoSyncOnLaunch = true
     static let defaultLibraryAutoRefreshIntervalMinutes = 0
+    static let defaultPreferLocalZoteroLibrary = true
+    static let defaultZoteroSoleLibrary = false
+    static let defaultImportCopiesAttachments = false
     static let defaultAppLanguage = "system"
+
+    static var preferLocalZoteroLibrary: Bool {
+        boolPreference(preferLocalZoteroLibraryKey, defaultValue: defaultPreferLocalZoteroLibrary)
+    }
+
+    static var zoteroSoleLibrary: Bool {
+        boolPreference(zoteroSoleLibraryKey, defaultValue: defaultZoteroSoleLibrary)
+    }
+
+    static var importCopiesAttachments: Bool {
+        #if os(iOS)
+        false
+        #else
+        boolPreference(importCopiesAttachmentsKey, defaultValue: defaultImportCopiesAttachments)
+        #endif
+    }
+
+    static var zoteroLinkKind: String {
+        let value = UserDefaults.standard.string(forKey: zoteroLinkKindKey)?
+            .trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        return value.isEmpty ? "local" : value
+    }
+
+    static func rememberZoteroLinkKind(_ kind: String) {
+        UserDefaults.standard.set(kind, forKey: zoteroLinkKindKey)
+    }
+
+    static func clearZoteroLinkKind() {
+        UserDefaults.standard.removeObject(forKey: zoteroLinkKindKey)
+    }
+
+    private static func boolPreference(_ key: String, defaultValue: Bool) -> Bool {
+        guard UserDefaults.standard.object(forKey: key) != nil else { return defaultValue }
+        return UserDefaults.standard.bool(forKey: key)
+    }
 
     static let readingModes = [
         "摘要速读",

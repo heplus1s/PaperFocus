@@ -150,6 +150,16 @@ struct SettingsView: View {
     private var libraryAutoSyncOnLaunch: Bool = AppSettings.defaultLibraryAutoSyncOnLaunch
     @AppStorage(AppSettings.libraryAutoRefreshIntervalMinutesKey)
     private var libraryAutoRefreshIntervalMinutes: Int = AppSettings.defaultLibraryAutoRefreshIntervalMinutes
+    @AppStorage(AppSettings.preferLocalZoteroLibraryKey)
+    private var preferLocalZoteroLibrary = AppSettings.defaultPreferLocalZoteroLibrary
+    @AppStorage(AppSettings.zoteroSoleLibraryKey)
+    private var zoteroSoleLibrary = AppSettings.defaultZoteroSoleLibrary
+    @AppStorage(AppSettings.importCopiesAttachmentsKey)
+    private var importCopiesAttachments = AppSettings.defaultImportCopiesAttachments
+    @AppStorage(AppSettings.zoteroAccountAPIKey)
+    private var zoteroAccountAPIKey = ""
+    @State private var showImportModes = false
+    @State private var importMode: LibraryImportMode = .zotero
 
     #if os(macOS)
     @AppStorage(AppSettings.macReadingAIDialogEnabledKey)
@@ -197,7 +207,26 @@ struct SettingsView: View {
             }
 
             Section("本地文献库关联") {
-                #if os(macOS)
+                Toggle("优先使用本机 Zotero 文献库", isOn: $preferLocalZoteroLibrary)
+                #if os(iOS)
+                settingsHint("在 iPhone 和 iPad 上，请使用系统文件选择器选择 Zotero 数据目录，或填写 API 密钥。此选项不会自动搜索 Mac 上的默认数据目录。关闭后，继续使用 PaperFocus 自己的文献库。")
+                #else
+                settingsHint("开启后，若发现唯一的本机 Zotero 文献库且尚未关联，启动时会自动关联该文献库，而不另行建立独立文献库。关闭后，继续使用 PaperFocus 自己的文献库。")
+                #endif
+
+                Toggle("仅使用 Zotero 文献库", isOn: $zoteroSoleLibrary)
+                settingsHint("开启后，文献列表只显示已关联的 Zotero 文献，并暂停使用应用内文献库。已保存的应用内条目不会被删除，关闭此选项后会重新显示。")
+
+                #if os(iOS)
+                settingsHint("在 iPhone 和 iPad 上，PaperFocus 直接打开“文件”中授权的原始 PDF，不会把文件复制到应用内。")
+                #else
+                Toggle("导入时复制附件", isOn: $importCopiesAttachments)
+                settingsHint("关闭时，直接打开 Zotero 文献库中的原始附件，不在 PaperFocus 中生成副本。开启时，导入过程可以将附件复制到应用目录。")
+                #endif
+
+                SecureField("Zotero API 密钥", text: $zoteroAccountAPIKey)
+                settingsHint("账户关联使用 Zotero 网站生成的 API 密钥。密钥仅保存在本机设置中。")
+
                 settingsActionRow(
                     zoteroLinkedDisplayPath.isEmpty ? "关联 Zotero 数据目录" : "重新关联 Zotero 数据目录",
                     systemImage: "externaldrive.badge.person.crop"
@@ -264,9 +293,10 @@ struct SettingsView: View {
                     }
                 }
 
-                settingsHint("推荐作为辅助阅读器使用：Zotero 走本地库目录关联，EndNote 当前走本地 XML 关联。元数据以本地文献库为主，PaperFocus 只保存自己的阅读状态与摘要；原 PDF 可继续直接批注保存。")
+                #if os(iOS)
+                settingsHint("在 iPhone 和 iPad 上，通过系统文件选择器关联 Zotero 或 EndNote。关闭“导入时复制附件”后，将直接打开原始文件。PaperFocus 保存阅读状态与摘要，不改写外部文献库。")
                 #else
-                settingsHint("当前版本的本地文献库关联仅在 macOS 提供。")
+                settingsHint("Zotero 可关联本机数据目录，EndNote 使用 XML。关闭“导入时复制附件”后，将直接打开原始文件。PaperFocus 保存阅读状态与摘要，不改写外部文献库。")
                 #endif
             }
 
@@ -428,24 +458,25 @@ struct SettingsView: View {
             }
 
             Section("一次性导入") {
-                #if os(macOS)
                 settingsActionRow("导入 Zotero JSON", systemImage: "tray.and.arrow.down") {
-                    importZoteroLibrary()
+                    importMode = .zotero
+                    showImportModes = true
                 }
                 .disabled(isImportingLibrary)
 
                 settingsActionRow("导入 EndNote XML", systemImage: "doc.badge.plus") {
-                    importEndNoteLibrary()
+                    importMode = .endNote
+                    showImportModes = true
                 }
                 .disabled(isImportingLibrary)
 
                 settingsActionRow("导入 PDF 文件夹", systemImage: "folder.badge.plus") {
-                    importPDFFolder()
+                    importMode = .pdfFolder
+                    showImportModes = true
                 }
                 .disabled(isImportingLibrary)
 
-                settingsHint("如果你只是临时迁移文献或导入历史 PDF，可以继续使用一次性导入模式。")
-                #endif
+                settingsHint("如果只是临时迁移文献或导入历史 PDF，可以继续使用一次性导入。")
             }
 
             Section("关于软件") {
@@ -474,6 +505,14 @@ struct SettingsView: View {
             Button("确定", role: .cancel) { }
         } message: {
             Text(libraryImportMessage)
+        }
+        .sheet(isPresented: $showImportModes) {
+            LibraryImportModeSheet(initialMode: importMode) { urls in
+                _ = try await libraryImportService.importStandalonePDFs(from: urls, into: modelContext)
+            } onFinished: { message in
+                libraryImportMessage = message
+                showLibraryImportAlert = true
+            }
         }
         .confirmationDialog("确认清空应用数据库？", isPresented: $showClearDatabaseConfirmation, titleVisibility: .visible) {
             Button("清空应用数据库", role: .destructive) {
@@ -591,6 +630,7 @@ struct SettingsView: View {
                 Text(title)
                 Spacer()
             }
+            .frame(minHeight: 44)
             .contentShape(Rectangle())
             .foregroundStyle(role == .destructive ? Color.red : Color.primary)
         }
@@ -621,21 +661,9 @@ struct SettingsView: View {
         }
     }
 
-    #if os(macOS)
     private func linkZoteroLibrary() {
-        guard let url = chooseZoteroLibraryLocation(
-            title: "选择 Zotero 数据目录或数据库文件",
-            prompt: "关联 Zotero"
-        ) else { return }
-
-        performLibraryImport {
-            let result = try await libraryImportService.linkZoteroLibrary(from: url, into: modelContext)
-            zoteroLinkedDisplayPath = result.rootURL.path
-            zoteroLinkedDisplayName = result.rootURL.lastPathComponent
-            let summary = result.summary
-            libraryImportMessage = summary.syncMessage
-            return summary
-        }
+        importMode = .zotero
+        showImportModes = true
     }
 
     private func refreshLinkedZoteroLibrary() {
@@ -648,26 +676,16 @@ struct SettingsView: View {
 
     private func unlinkZoteroLibrary() {
         SecurityScopedBookmarkStore.shared.clearBookmark(for: .zoteroLocal)
+        AppSettings.clearZoteroLinkKind()
         zoteroLinkedDisplayPath = ""
         zoteroLinkedDisplayName = ""
-        libraryImportMessage = "已断开 Zotero 本地库关联。已导入的文献记录会保留，但不再继续同步。"
+        libraryImportMessage = "已断开 Zotero 文献库关联。已导入的文献记录会保留，但不再继续同步。"
         showLibraryImportAlert = true
     }
 
     private func linkEndNoteLibrary() {
-        guard let url = chooseFile(
-            title: "选择 EndNote XML 文件",
-            prompt: "关联 EndNote",
-            contentTypes: [.xml]
-        ) else { return }
-
-        performLibraryImport {
-            let summary = try await libraryImportService.linkEndNoteXML(from: url, into: modelContext)
-            endNoteLinkedDisplayPath = url.path
-            endNoteLinkedDisplayName = url.lastPathComponent
-            libraryImportMessage = summary.syncMessage
-            return summary
-        }
+        importMode = .endNote
+        showImportModes = true
     }
 
     private func refreshLinkedEndNoteLibrary() {
@@ -687,6 +705,7 @@ struct SettingsView: View {
         showLibraryImportAlert = true
     }
 
+    #if os(macOS)
     private func importZoteroLibrary() {
         guard let url = chooseFile(
             title: "选择 Zotero JSON 导出文件",
@@ -721,6 +740,8 @@ struct SettingsView: View {
             try await libraryImportService.importPDFFolder(from: url, into: modelContext)
         }
     }
+
+    #endif
 
     private func performLibraryImport(_ operation: @escaping @MainActor () async throws -> LibraryImportSummary) {
         isImportingLibrary = true
@@ -762,6 +783,7 @@ struct SettingsView: View {
             try modelContext.save()
 
             SecurityScopedBookmarkStore.shared.clearBookmark(for: .zoteroLocal)
+            AppSettings.clearZoteroLinkKind()
             SecurityScopedBookmarkStore.shared.clearBookmark(for: .endNoteXML)
             zoteroLinkedDisplayPath = ""
             zoteroLinkedDisplayName = ""
@@ -776,6 +798,7 @@ struct SettingsView: View {
         }
     }
 
+    #if os(macOS)
     private func chooseFile(title: String, prompt: String, contentTypes: [UTType]) -> URL? {
         let panel = NSOpenPanel()
         panel.title = title

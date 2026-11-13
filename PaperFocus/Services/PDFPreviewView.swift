@@ -1706,10 +1706,11 @@ struct PDFKitContainer: UIViewRepresentable {
             let expectedID = UUID()
             loadID = expectedID
             bridge.setDocumentURL(url)
+            let readURL = SecurityScopedBookmarkStore.shared.resolvedReadingURL(for: url)
 
             Task { @MainActor in
                 let loaded = await Task.detached(priority: .userInitiated) {
-                    PDFTextExtractor.loadDocument(at: url)
+                    PDFTextExtractor.loadDocument(at: readURL)
                 }.value
                 guard self.loadID == expectedID else { return }
                 guard let document = loaded.document else { return }
@@ -1792,10 +1793,11 @@ struct PDFKitContainer: NSViewRepresentable {
             let expectedID = UUID()
             loadID = expectedID
             bridge.setDocumentURL(url)
+            let readURL = SecurityScopedBookmarkStore.shared.resolvedReadingURL(for: url)
 
             Task { @MainActor in
                 let loaded = await Task.detached(priority: .userInitiated) {
-                    PDFTextExtractor.loadDocument(at: url)
+                    PDFTextExtractor.loadDocument(at: readURL)
                 }.value
                 guard self.loadID == expectedID else { return }
                 guard let document = loaded.document else { return }

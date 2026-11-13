@@ -206,6 +206,7 @@ struct PaperDetailView: View {
     }
 
     private func attachPDF(url: URL) {
+        SecurityScopedBookmarkStore.shared.saveGrantedResource(at: url)
         paper.pdfPath = url.path
         paper.pdfFileName = url.lastPathComponent
         paper.hasPDF = true
@@ -217,9 +218,10 @@ struct PaperDetailView: View {
         guard !paper.pdfPath.isEmpty else { return }
 
         let url = URL(fileURLWithPath: paper.pdfPath)
-        guard FileManager.default.fileExists(atPath: url.path) else { return }
-
-        pdfPreviewURL = url
+        let accessHandle = SecurityScopedBookmarkStore.shared.beginAccess(forExternalFile: url)
+        let readURL = SecurityScopedBookmarkStore.shared.resolvedReadingURL(for: url)
+        SecurityScopedBookmarkStore.shared.endAccess(accessHandle)
+        pdfPreviewURL = readURL
         showPDFPreview = true
     }
 

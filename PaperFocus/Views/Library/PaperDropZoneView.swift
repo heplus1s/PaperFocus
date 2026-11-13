@@ -15,7 +15,8 @@ import UniformTypeIdentifiers
 
 struct PaperDropZoneView: View {
     let isImporting: Bool
-    let onDropPDF: (URL) -> Void
+    let onDropFiles: ([URL]) -> Void
+    let onRequestImport: () -> Void
 
     @State private var isTargeted = false
 
@@ -24,13 +25,18 @@ struct PaperDropZoneView: View {
             Image(systemName: "doc.badge.plus")
                 .font(.system(size: 34, weight: .regular))
 
-            Text("拖入 PDF 自动新增文献")
+            Text("导入文献")
                 .font(.title3.weight(.semibold))
 
-            Text("支持将论文 PDF 直接拖到这里，系统会自动识别 DOI 并补全文献信息。")
+            Text("可将 PDF、Zotero 文献库、EndNote XML 或 PaperFocus 文献库拖入此处。")
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
+
+            Button("选择导入方式", action: onRequestImport)
+                .buttonStyle(.bordered)
+                .frame(minHeight: 44)
+                .disabled(isImporting)
 
             if isImporting {
                 ProgressView("正在导入…")
@@ -60,69 +66,45 @@ struct PaperDropZoneView: View {
     }
 
     private func handleDrop(providers: [NSItemProvider]) -> Bool {
-        guard let provider = providers.first else {
-            print("Drop failed: no provider")
-            return false
-        }
-
         let typeIdentifier = UTType.fileURL.identifier
+        let group = DispatchGroup()
+        let lock = NSLock()
+        var urls: [URL] = []
 
-        guard provider.hasItemConformingToTypeIdentifier(typeIdentifier) else {
-            print("Drop failed: provider does not conform to fileURL")
-            return false
+        for provider in providers where provider.hasItemConformingToTypeIdentifier(typeIdentifier) {
+            group.enter()
+            provider.loadItem(forTypeIdentifier: typeIdentifier, options: nil) { item, _ in
+                defer { group.leave() }
+                if let url = Self.url(from: item) {
+                    lock.lock()
+                    urls.append(url)
+                    lock.unlock()
+                }
+            }
         }
 
-        provider.loadItem(forTypeIdentifier: typeIdentifier, options: nil) { item, error in
-            if let error {
-                print("Drop loadItem error: \(error)")
-                return
-            }
-
-            if let url = item as? URL {
-                handleResolvedURL(url)
-                return
-            }
-
-            if let nsurl = item as? NSURL, let url = nsurl as URL? {
-                handleResolvedURL(url)
-                return
-            }
-
-            if let data = item as? Data,
-               let url = URL(dataRepresentation: data, relativeTo: nil) {
-                handleResolvedURL(url)
-                return
-            }
-
-            print("Drop failed: unsupported dropped item type = \(String(describing: item))")
+        group.notify(queue: .main) {
+            guard !urls.isEmpty else { return }
+            onDropFiles(urls)
         }
-
-        return true
+        return !providers.isEmpty
     }
 
-    private func handleResolvedURL(_ url: URL) {
-        let normalizedURL: URL
-
-        if url.isFileURL {
-            normalizedURL = url
-        } else {
-            normalizedURL = URL(fileURLWithPath: url.path)
+    private static func url(from item: NSSecureCoding?) -> URL? {
+        if let url = item as? URL {
+            return url.isFileURL ? url : URL(fileURLWithPath: url.path)
         }
-
-        print("Dropped file URL: \(normalizedURL.path)")
-
-        guard normalizedURL.pathExtension.lowercased() == "pdf" else {
-            print("Drop ignored: not a PDF")
-            return
+        if let nsurl = item as? NSURL, let url = nsurl as URL? {
+            return url.isFileURL ? url : URL(fileURLWithPath: url.path)
         }
-
-        DispatchQueue.main.async {
-            onDropPDF(normalizedURL)
+        if let data = item as? Data, let url = URL(dataRepresentation: data, relativeTo: nil) {
+            return url.isFileURL ? url : URL(fileURLWithPath: url.path)
         }
+        return nil
     }
 }
 
 #Preview {
-    PaperDropZoneView(isImporting: false) { _ in }
+    PaperDropZoneView(isImporting: false, onDropFiles: { _ in }, onRequestImport: {})
         .padding()
 }

@@ -345,9 +345,10 @@ struct MacReadingAIDialogView: View {
         }
 
         let accessHandle = SecurityScopedBookmarkStore.shared.beginAccess(forExternalFile: url)
+        let readURL = SecurityScopedBookmarkStore.shared.resolvedReadingURL(for: url)
         defer { SecurityScopedBookmarkStore.shared.endAccess(accessHandle) }
         let text = await Task.detached(priority: .userInitiated) {
-            PDFTextExtractor.extractText(from: url, maxPages: 12)
+            PDFTextExtractor.extractText(from: readURL, maxPages: 12)
         }.value
         let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else {

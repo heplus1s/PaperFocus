@@ -27,8 +27,13 @@ struct RootTabView: View {
     private var libraryAutoSyncOnLaunch: Bool = AppSettings.defaultLibraryAutoSyncOnLaunch
     @AppStorage(AppSettings.libraryAutoRefreshIntervalMinutesKey)
     private var libraryAutoRefreshIntervalMinutes: Int = AppSettings.defaultLibraryAutoRefreshIntervalMinutes
+    @AppStorage(AppSettings.preferLocalZoteroLibraryKey)
+    private var preferLocalZoteroLibrary = AppSettings.defaultPreferLocalZoteroLibrary
 
     @State private var hasPerformedStartupLinkedSync = false
+    @State private var didAttemptZoteroAdopt = false
+    @State private var showLibraryImportSheet = false
+    @State private var libraryImportMode: LibraryImportMode = .zotero
     @State private var librarySyncNoticeMessage = ""
     @State private var librarySyncNoticeToken = UUID()
 
@@ -91,12 +96,27 @@ struct RootTabView: View {
             #endif
         }
         .onAppear {
+            if UserDefaults.standard.bool(forKey: AppSettings.paperFocusStoreRejectedKey) {
+                showLibrarySyncNotice(AppSettings.localizedString("现有文献库文件不是 PaperFocus 文献库，因此未打开。当前文献库保持不变。"))
+            }
             guard !hasPerformedStartupLinkedSync else { return }
             hasPerformedStartupLinkedSync = true
-
-            guard libraryAutoSyncOnLaunch, hasLinkedLibrary else { return }
             Task {
+                await adoptLocalZoteroIfNeeded()
+                guard libraryAutoSyncOnLaunch, hasLinkedLibrary else { return }
                 await refreshLinkedLibrariesSilently(reason: .launch)
+            }
+        }
+        .onChange(of: preferLocalZoteroLibrary) { _, isEnabled in
+            guard isEnabled else { return }
+            didAttemptZoteroAdopt = false
+            Task { await adoptLocalZoteroIfNeeded() }
+        }
+        .sheet(isPresented: $showLibraryImportSheet) {
+            LibraryImportModeSheet(initialMode: libraryImportMode) { urls in
+                _ = try await libraryImportService.importStandalonePDFs(from: urls, into: modelContext)
+            } onFinished: { message in
+                showLibrarySyncNotice(message)
             }
         }
         .task(id: autoRefreshTaskID) {
@@ -197,27 +217,40 @@ struct RootTabView: View {
         }
     }
 
+    private func adoptLocalZoteroIfNeeded() async {
+        guard !didAttemptZoteroAdopt else { return }
+        didAttemptZoteroAdopt = true
+        guard preferLocalZoteroLibrary else { return }
+        guard zoteroLinkedDisplayPath.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
+
+        let matches = await Task.detached(priority: .userInitiated) {
+            ZoteroLibraryLocator.candidates()
+        }.value
+
+        if matches.count > 1 {
+            showLibrarySyncNotice(AppSettings.localizedString("找到多个 Zotero 文献库。请在导入时选择要关联的文献库。"))
+            return
+        }
+
+        guard let match = matches.first else { return }
+        do {
+            let result = try await libraryImportService.linkZoteroLibrary(from: match.rootURL, into: modelContext)
+            zoteroLinkedDisplayPath = result.rootURL.path
+            zoteroLinkedDisplayName = result.rootURL.lastPathComponent
+            showLibrarySyncNotice(AppSettings.localizedFormat("Zotero：%@", defaultValue: "Zotero: %@", result.summary.syncMessage))
+        } catch {
+            showLibrarySyncNotice(
+                AppSettings.localizedFormat("Zotero 操作失败：%@", defaultValue: "Zotero failed: %@", error.localizedDescription)
+            )
+        }
+    }
+
     #if os(macOS)
     private func handleLibraryMenuCommand(_ command: AppMenuLibraryCommand) {
         switch command {
         case .linkZotero:
-            guard let url = chooseZoteroLibraryLocation(
-                title: AppSettings.localizedString("选择 Zotero 数据目录或数据库文件"),
-                prompt: AppSettings.localizedString("关联 Zotero")
-            ) else { return }
-
-            Task {
-                do {
-                    let result = try await libraryImportService.linkZoteroLibrary(from: url, into: modelContext)
-                    zoteroLinkedDisplayPath = result.rootURL.path
-                    zoteroLinkedDisplayName = result.rootURL.lastPathComponent
-                    showLibrarySyncNotice(AppSettings.localizedFormat("Zotero：%@", defaultValue: "Zotero: %@", result.summary.syncMessage))
-                } catch {
-                    showLibrarySyncNotice(
-                        AppSettings.localizedFormat("Zotero 操作失败：%@", defaultValue: "Zotero failed: %@", error.localizedDescription)
-                    )
-                }
-            }
+            libraryImportMode = .zotero
+            showLibraryImportSheet = true
 
         case .refreshZotero:
             guard !zoteroLinkedDisplayPath.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
@@ -234,29 +267,14 @@ struct RootTabView: View {
 
         case .unlinkZotero:
             SecurityScopedBookmarkStore.shared.clearBookmark(for: .zoteroLocal)
+            AppSettings.clearZoteroLinkKind()
             zoteroLinkedDisplayPath = ""
             zoteroLinkedDisplayName = ""
-            showLibrarySyncNotice(AppSettings.localizedString("已断开 Zotero 本地库关联。"))
+            showLibrarySyncNotice(AppSettings.localizedString("已断开 Zotero 文献库关联。"))
 
         case .linkEndNote:
-            guard let url = chooseFile(
-                title: AppSettings.localizedString("选择 EndNote XML 文件"),
-                prompt: AppSettings.localizedString("关联 EndNote"),
-                contentTypes: [.xml]
-            ) else { return }
-
-            Task {
-                do {
-                    let summary = try await libraryImportService.linkEndNoteXML(from: url, into: modelContext)
-                    endNoteLinkedDisplayPath = url.path
-                    endNoteLinkedDisplayName = url.lastPathComponent
-                    showLibrarySyncNotice(AppSettings.localizedFormat("EndNote：%@", defaultValue: "EndNote: %@", summary.syncMessage))
-                } catch {
-                    showLibrarySyncNotice(
-                        AppSettings.localizedFormat("EndNote 操作失败：%@", defaultValue: "EndNote failed: %@", error.localizedDescription)
-                    )
-                }
-            }
+            libraryImportMode = .endNote
+            showLibraryImportSheet = true
 
         case .refreshEndNote:
             guard !endNoteLinkedDisplayPath.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
@@ -281,57 +299,16 @@ struct RootTabView: View {
             showLibrarySyncNotice(AppSettings.localizedString("已断开 EndNote 本地库关联。"))
 
         case .importZoteroJSON:
-            guard let url = chooseFile(
-                title: AppSettings.localizedString("选择 Zotero JSON 导出文件"),
-                prompt: AppSettings.localizedString("导入"),
-                contentTypes: [.json]
-            ) else { return }
-
-            Task {
-                do {
-                    let summary = try await libraryImportService.importZotero(from: url, into: modelContext)
-                    showLibrarySyncNotice(summary.importMessage)
-                } catch {
-                    showLibrarySyncNotice(
-                        AppSettings.localizedFormat("导入 Zotero JSON 失败：%@", defaultValue: "Import Zotero JSON failed: %@", error.localizedDescription)
-                    )
-                }
-            }
+            libraryImportMode = .zotero
+            showLibraryImportSheet = true
 
         case .importEndNoteXML:
-            guard let url = chooseFile(
-                title: AppSettings.localizedString("选择 EndNote XML 导出文件"),
-                prompt: AppSettings.localizedString("导入"),
-                contentTypes: [.xml]
-            ) else { return }
-
-            Task {
-                do {
-                    let summary = try await libraryImportService.importEndNoteXML(from: url, into: modelContext)
-                    showLibrarySyncNotice(summary.importMessage)
-                } catch {
-                    showLibrarySyncNotice(
-                        AppSettings.localizedFormat("导入 EndNote XML 失败：%@", defaultValue: "Import EndNote XML failed: %@", error.localizedDescription)
-                    )
-                }
-            }
+            libraryImportMode = .endNote
+            showLibraryImportSheet = true
 
         case .importPDFFolder:
-            guard let url = chooseDirectory(
-                title: AppSettings.localizedString("选择 PDF 文件夹"),
-                prompt: AppSettings.localizedString("导入文件夹")
-            ) else { return }
-
-            Task {
-                do {
-                    let summary = try await libraryImportService.importPDFFolder(from: url, into: modelContext)
-                    showLibrarySyncNotice(summary.importMessage)
-                } catch {
-                    showLibrarySyncNotice(
-                        AppSettings.localizedFormat("导入 PDF 文件夹失败：%@", defaultValue: "Import PDF folder failed: %@", error.localizedDescription)
-                    )
-                }
-            }
+            libraryImportMode = .pdfFolder
+            showLibraryImportSheet = true
         }
     }
 
@@ -747,6 +724,8 @@ private struct MacLinkedLibrarySidebarPanel: View {
     private var zoteroLinkedDisplayName: String = AppSettings.defaultLinkedLibraryDisplayName
     @AppStorage(AppSettings.endNoteLinkedDisplayNameKey)
     private var endNoteLinkedDisplayName: String = AppSettings.defaultLinkedLibraryDisplayName
+    @AppStorage(AppSettings.zoteroSoleLibraryKey)
+    private var zoteroSoleLibrary = AppSettings.defaultZoteroSoleLibrary
 
     @State private var isRefreshingLinkedLibrary = false
     @State private var panelMessage = ""
@@ -759,7 +738,7 @@ private struct MacLinkedLibrarySidebarPanel: View {
     }
 
     private var availablePapers: [Paper] {
-        papers
+        zoteroSoleLibrary ? papers.filter { $0.sourceLibraryType == "zotero" } : papers
     }
 
     private var sections: [MacLinkedLibrarySection] {
@@ -782,7 +761,7 @@ private struct MacLinkedLibrarySidebarPanel: View {
             result.append(makeSection(for: "zotero", title: AppSettings.localizedString("我的文库"), tint: .blue))
         }
 
-        if !endNoteLinkedDisplayPath.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+        if !zoteroSoleLibrary, !endNoteLinkedDisplayPath.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
             result.append(makeSection(for: "endnote", title: AppSettings.localizedString("EndNote 文库"), tint: .orange))
         }
 
@@ -1039,44 +1018,11 @@ private struct MacLinkedLibrarySidebarPanel: View {
     }
 
     private func linkZoteroLibrary() {
-        guard let url = chooseZoteroLibraryLocation(
-            title: AppSettings.localizedString("选择 Zotero 数据目录或数据库文件"),
-            prompt: AppSettings.localizedString("关联 Zotero")
-        ) else { return }
-
-        Task {
-            do {
-                let result = try await libraryImportService.linkZoteroLibrary(from: url, into: modelContext)
-                zoteroLinkedDisplayPath = result.rootURL.path
-                zoteroLinkedDisplayName = result.rootURL.lastPathComponent
-                panelMessage = result.summary.syncMessage
-                showPanelAlert = true
-            } catch {
-                panelMessage = error.localizedDescription
-                showPanelAlert = true
-            }
-        }
+        NotificationCenter.default.post(name: .appMenuLibraryCommand, object: AppMenuLibraryCommand.linkZotero)
     }
 
     private func linkEndNoteLibrary() {
-        guard let url = chooseFile(
-            title: AppSettings.localizedString("选择 EndNote XML 文件"),
-            prompt: AppSettings.localizedString("关联 EndNote"),
-            contentTypes: [.xml]
-        ) else { return }
-
-        Task {
-            do {
-                let summary = try await libraryImportService.linkEndNoteXML(from: url, into: modelContext)
-                endNoteLinkedDisplayPath = url.path
-                endNoteLinkedDisplayName = url.lastPathComponent
-                panelMessage = summary.syncMessage
-                showPanelAlert = true
-            } catch {
-                panelMessage = error.localizedDescription
-                showPanelAlert = true
-            }
-        }
+        NotificationCenter.default.post(name: .appMenuLibraryCommand, object: AppMenuLibraryCommand.linkEndNote)
     }
 
     private func chooseFile(title: String, prompt: String, contentTypes: [UTType]) -> URL? {
@@ -1111,6 +1057,12 @@ private struct MacHomeOverviewPanel: View {
     @Environment(\.appearsActive) private var appearsActive
     @Query(sort: \Paper.createdAt, order: .reverse) private var papers: [Paper]
     @Query(sort: \FocusTask.createdAt, order: .reverse) private var focusTasks: [FocusTask]
+    @AppStorage(AppSettings.zoteroSoleLibraryKey)
+    private var zoteroSoleLibrary = AppSettings.defaultZoteroSoleLibrary
+
+    private var catalogPapers: [Paper] {
+        zoteroSoleLibrary ? papers.filter { $0.sourceLibraryType == "zotero" } : papers
+    }
 
     private var effectiveCompletedTasks: [FocusTask] {
         focusTasks
@@ -1150,7 +1102,7 @@ private struct MacHomeOverviewPanel: View {
                         VStack(spacing: 10) {
                             statsRow(
                                 title: "总文献",
-                                value: "\(papers.count)",
+                                value: "\(catalogPapers.count)",
                                 secondaryTitle: "有效专注",
                                 secondaryValue: "\(effectiveCompletedTasks.count)"
                             )
