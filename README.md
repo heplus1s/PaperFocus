@@ -6,4 +6,6 @@ PaperFocus is a macOS app for focused academic paper reading. It keeps a local p
 
 Open `PaperFocus.xcodeproj` in Xcode to build and run it. The current project targets macOS 15.7 or later.
 
-A license has not been attached yet and can be added later.
+## License
+
+This repository is licensed under the [PolyForm Noncommercial License 1.0.0](LICENSE). You may use, modify, and share the software for noncommercial purposes. Commercial use is not allowed without prior permission. To request a commercial license, open an issue in this repository.

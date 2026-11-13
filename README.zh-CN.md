@@ -6,4 +6,6 @@ PaperFocus 是一款面向专注阅读论文的 macOS 应用。它提供本地�
 
 在 Xcode 中打开 `PaperFocus.xcodeproj` 即可编译运行。当前工程的系统要求为 macOS 15.7 或更高版本。
 
-本仓库尚未附带许可协议，可在之后补充。
+## 许可协议
+
+本仓库采用 [PolyForm Noncommercial License 1.0.0](LICENSE)（非商业许可）。允许出于非商业目的使用、修改和分享本软件；未经事先许可，不得用于商业用途。如需商业授权，请在本仓库提交 issue。正式法律文本以英文 `LICENSE` 文件为准。

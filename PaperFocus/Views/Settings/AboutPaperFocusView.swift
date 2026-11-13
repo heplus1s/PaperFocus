@@ -7,7 +7,7 @@ struct AboutPaperFocusView: View {
     private let appVersion = "0.3.0"
     private let copyrightNotice = "© 2026 The PaperFocus authors. All rights reserved."
     private var licenseSummary: String {
-        AppSettings.localizedString("本应用受相关版权法保护。未经许可，不得复制、分发或用于商业用途。")
+        AppSettings.localizedString("本软件按 PolyForm Noncommercial License 1.0.0 授权。允许非商业使用、修改与分发；未经事先许可，不得用于商业用途。")
     }
     private let contactEmail = "support@example.com"
     private let website = "https://example.com"

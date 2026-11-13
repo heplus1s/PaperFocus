@@ -404,7 +404,7 @@
 "未选择文献" = "No paper selected";
 "本地文件" = "Local Files";
 "本地文献库关联" = "Linked Libraries";
-"本应用受相关版权法保护。未经许可，不得复制、分发或用于商业用途。" = "This app is protected by copyright law. Copying, distribution, or commercial use without permission is prohibited.";
+"本软件按 PolyForm Noncommercial License 1.0.0 授权。允许非商业使用、修改与分发；未经事先许可，不得用于商业用途。" = "This software is licensed under the PolyForm Noncommercial License 1.0.0. Noncommercial use, modification, and distribution are allowed. Commercial use requires prior permission.";
 "本轮信息" = "Session Info";
 "本轮目标" = "Session Goal";
 "本轮累计 %d 分钟，达到 %d 分钟才记为有效专注。" = "This session totals %d minutes. It counts as effective focus only after %d minutes.";
