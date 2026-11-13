@@ -77,6 +77,9 @@ struct LibraryView: View {
     @State private var hasAttemptedInitialLinkedSync = false
 
     @State private var isImportingPDF = false
+    @State private var showImportModes = false
+    @State private var importMode: LibraryImportMode = .zotero
+    @State private var stagedImportURL: URL?
     @State private var isRefreshingLinkedLibrary = false
     @State private var errorMessage: String = ""
     @State private var showErrorAlert = false
@@ -107,6 +110,8 @@ struct LibraryView: View {
     private var zoteroLinkedDisplayPath: String = AppSettings.defaultLinkedLibraryDisplayPath
     @AppStorage(AppSettings.endNoteLinkedDisplayPathKey)
     private var endNoteLinkedDisplayPath: String = AppSettings.defaultLinkedLibraryDisplayPath
+    @AppStorage(AppSettings.zoteroSoleLibraryKey)
+    private var zoteroSoleLibrary = AppSettings.defaultZoteroSoleLibrary
 
     @State private var isGeneratingSummary = false
     @State private var summaryText = ""
@@ -240,7 +245,9 @@ struct LibraryView: View {
         .sheet(isPresented: $showPDFPicker) {
             PDFPicker { url in
                 showPDFPicker = false
-                importPDF(url)
+                Task {
+                    try? await importPDFFiles([url])
+                }
             }
         }
         #endif
@@ -251,11 +258,15 @@ struct LibraryView: View {
 
                 if !pdfPath.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
                     do {
-                        let importedURL = try PaperFileService.importPDFToLibrary(
-                            from: URL(fileURLWithPath: pdfPath)
-                        )
-                        finalPDFPath = importedURL.path
-                        finalPDFFileName = importedURL.lastPathComponent
+                        let sourceURL = URL(fileURLWithPath: pdfPath)
+                        if AppSettings.importCopiesAttachments {
+                            let importedURL = try PaperFileService.importPDFToLibrary(from: sourceURL)
+                            finalPDFPath = importedURL.path
+                            finalPDFFileName = importedURL.lastPathComponent
+                        } else {
+                            finalPDFPath = sourceURL.path
+                            finalPDFFileName = sourceURL.lastPathComponent
+                        }
                     } catch {
                         errorMessage = AppSettings.localizedFormat(
                             "导入手动选择的 PDF 失败：%@",
@@ -367,23 +378,21 @@ struct LibraryView: View {
                     }
                     #endif
 
-                    #if os(iOS)
                     Button {
-                        showPDFPicker = true
+                        importMode = .zotero
+                        stagedImportURL = nil
+                        showImportModes = true
                     } label: {
+                        #if os(iOS)
                         if isCompactLibraryLayout {
                             Image(systemName: "square.and.arrow.down")
                         } else {
-                            Label("导入 PDF", systemImage: "square.and.arrow.down")
+                            Label("导入", systemImage: "square.and.arrow.down")
                         }
-                    }
-                    #else
-                    Button {
-                        importPDFUsingFinder()
-                    } label: {
+                        #else
                         Label("导入", systemImage: "square.and.arrow.down")
+                        #endif
                     }
-                    #endif
 
                     Button {
                         generateSummaryForSelectedPaper()
@@ -462,6 +471,22 @@ struct LibraryView: View {
             selectedSidebarFilter = .all
             syncLinkedLibrariesIfNeeded(force: true)
         }
+        .onChange(of: zoteroSoleLibrary) { _, _ in
+            refreshPapersFromStore()
+        }
+        .sheet(isPresented: $showImportModes) {
+            LibraryImportModeSheet(
+                initialMode: importMode,
+                stagedURL: stagedImportURL,
+                importPDFs: { urls in
+                    try await importPDFFiles(urls)
+                },
+                onFinished: { message in
+                    showLibrarySyncHint(message)
+                    refreshPapersFromStore()
+                }
+            )
+        }
         .navigationTitle(navigationTitleText)
         #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
@@ -500,8 +525,12 @@ struct LibraryView: View {
     private var libraryContentPane: some View {
         VStack(spacing: 12) {
             #if os(macOS)
-            PaperDropZoneView(isImporting: isImportingPDF) { url in
-                importPDF(url)
+            PaperDropZoneView(isImporting: isImportingPDF) { urls in
+                handleDroppedFiles(urls)
+            } onRequestImport: {
+                importMode = .zotero
+                stagedImportURL = nil
+                showImportModes = true
             }
             #endif
 
@@ -693,13 +722,19 @@ struct LibraryView: View {
 
         #if os(macOS)
         if papersCache.isEmpty {
-            return AppSettings.localizedString("当前还没有文献，请把 PDF 拖入上方区域自动添加，或点击导入按钮选择 PDF。")
+            if zoteroSoleLibrary {
+                return AppSettings.localizedString("已停用应用内文献库。请关联 Zotero 文献库后查看条目。")
+            }
+            return AppSettings.localizedString("当前还没有文献。请使用导入按钮选择 PDF、Zotero、EndNote 或 PaperFocus 文献库。")
         } else {
             return AppSettings.localizedString("请尝试修改搜索词或状态筛选条件。")
         }
         #else
         if papersCache.isEmpty {
-            return AppSettings.localizedString("当前还没有文献，请点击导入图标添加 PDF。")
+            if zoteroSoleLibrary {
+                return AppSettings.localizedString("已停用应用内文献库。请关联 Zotero 文献库后查看条目。")
+            }
+            return AppSettings.localizedString("当前还没有文献。请使用导入按钮选择 PDF、Zotero、EndNote 或 PaperFocus 文献库。")
         } else {
             return AppSettings.localizedString("请尝试修改搜索词或状态筛选条件。")
         }
@@ -804,7 +839,7 @@ struct LibraryView: View {
             sections.append(makeLinkedLibrarySection(for: "zotero", title: AppSettings.localizedString("我的文库"), tint: .blue))
         }
 
-        if !endNoteLinkedDisplayPath.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+        if !zoteroSoleLibrary, !endNoteLinkedDisplayPath.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
             sections.append(makeLinkedLibrarySection(for: "endnote", title: AppSettings.localizedString("EndNote 文库"), tint: .orange))
         }
 
@@ -1170,58 +1205,53 @@ struct LibraryView: View {
         }
     }
 
-    private func importPDF(_ url: URL) {
-        isImportingPDF = true
-
-        Task {
-            do {
-                let storedURL = try await Task.detached(priority: .userInitiated) {
-                    try PaperFileService.importPDFToLibrary(from: url)
-                }.value
-                let paperUUID = await MainActor.run { () -> String in
-                    let fallbackTitle = storedURL.deletingPathExtension().lastPathComponent
-                    let paper = Paper(
-                        title: fallbackTitle.isEmpty ? AppSettings.localizedString("未命名文献") : fallbackTitle,
-                        authors: AppSettings.localizedString("未知作者"),
-                        journal: "",
-                        year: Calendar.current.component(.year, from: .now),
-                        doi: "",
-                        pdfPath: storedURL.path,
-                        statusRaw: PaperStatus.unread.rawValue
-                    )
-
-                    paper.hasPDF = true
-                    paper.pdfFileName = storedURL.lastPathComponent
-                    paper.importMethod = "libraryCopy"
-                    paper.databaseSource = "PDF"
-                    paper.citationKey = makeCitationKey(
-                        authors: paper.authors,
-                        title: paper.title,
-                        year: paper.year
-                    )
-                    paper.updatedAt = .now
-
-                    savePaper(paper)
-                    revealImportedPaper()
-                    isImportingPDF = false
-                    return paper.uuid
-                }
-
-                do {
-                    let metadata = try await importMetadataWithTimeout(from: storedURL, seconds: 10)
-                    await MainActor.run {
-                        applyMetadata(metadata, toPaperUUID: paperUUID)
-                    }
-                } catch {
-                    // 元数据获取失败时保留已导入条目，不阻塞主流程。
-                }
-            } catch {
-                await MainActor.run {
-                    errorMessage = AppSettings.localizedFormat("导入 PDF 失败：%@", defaultValue: "Import PDF failed: %@", error.localizedDescription)
-                    showErrorAlert = true
-                    isImportingPDF = false
-                }
+    private func importOnePDF(_ url: URL) async throws {
+        let didAccess = url.startAccessingSecurityScopedResource()
+        defer {
+            if didAccess {
+                url.stopAccessingSecurityScopedResource()
             }
+        }
+        let shouldCopy = AppSettings.importCopiesAttachments
+        let storedURL: URL
+        if shouldCopy {
+            storedURL = try await Task.detached(priority: .userInitiated) {
+                try PaperFileService.importPDFToLibrary(from: url)
+            }.value
+        } else {
+            storedURL = url
+        }
+
+        let fallbackTitle = storedURL.deletingPathExtension().lastPathComponent
+        let paper = Paper(
+            title: fallbackTitle.isEmpty ? AppSettings.localizedString("未命名文献") : fallbackTitle,
+            authors: AppSettings.localizedString("未知作者"),
+            journal: "",
+            year: Calendar.current.component(.year, from: .now),
+            doi: "",
+            pdfPath: storedURL.path,
+            statusRaw: PaperStatus.unread.rawValue
+        )
+
+        paper.hasPDF = true
+        paper.pdfFileName = storedURL.lastPathComponent
+        paper.importMethod = shouldCopy ? "libraryCopy" : "originalFile"
+        paper.databaseSource = "PDF"
+        paper.citationKey = makeCitationKey(
+            authors: paper.authors,
+            title: paper.title,
+            year: paper.year
+        )
+        paper.updatedAt = .now
+        let paperUUID = paper.uuid
+        savePaper(paper)
+        revealImportedPaper()
+
+        do {
+            let metadata = try await importMetadataWithTimeout(from: storedURL, seconds: 10)
+            applyMetadata(metadata, toPaperUUID: paperUUID)
+        } catch {
+            // Metadata lookup can fail without discarding the imported record.
         }
     }
 
@@ -1298,23 +1328,62 @@ struct LibraryView: View {
         let descriptor = FetchDescriptor<Paper>(
             sortBy: [SortDescriptor(\.createdAt, order: .reverse)]
         )
-        papersCache = (try? modelContext.fetch(descriptor)) ?? []
+        let fetched = (try? modelContext.fetch(descriptor)) ?? []
+        papersCache = zoteroSoleLibrary
+            ? fetched.filter { $0.sourceLibraryType == "zotero" }
+            : fetched
     }
 
-    #if os(macOS)
-    private func importPDFUsingFinder() {
-        let panel = NSOpenPanel()
-        panel.title = AppSettings.localizedString("选择 PDF")
-        panel.prompt = AppSettings.localizedString("导入")
-        panel.canChooseFiles = true
-        panel.canChooseDirectories = false
-        panel.allowsMultipleSelection = false
-        panel.allowedContentTypes = [.pdf]
+    private func handleDroppedFiles(_ urls: [URL]) {
+        Task {
+            var pdfs: [URL] = []
+            var libraryURL: URL?
+            var unrecognized = false
+            for url in urls {
+                let kind = await Task.detached(priority: .userInitiated) {
+                    LiteratureLibraryKind.detect(at: url)
+                }.value
+                switch kind {
+                case .pdf:
+                    pdfs.append(url)
+                case .zoteroDataDirectory, .zoteroJSON, .endNoteXML, .paperFocusExport, .paperFocusStore, .pdfFolder, .endNotePackage:
+                    libraryURL = url
+                case .unrecognized:
+                    unrecognized = true
+                }
+            }
 
-        guard panel.runModal() == .OK, let url = panel.url else { return }
-        importPDF(url)
+            if !pdfs.isEmpty {
+                try? await importPDFFiles(pdfs)
+            }
+            if let libraryURL {
+                stagedImportURL = libraryURL
+                importMode = .zotero
+                showImportModes = true
+            } else if unrecognized && pdfs.isEmpty {
+                errorMessage = AppSettings.localizedString("无法识别该文献库格式。请选择 Zotero 数据目录、Zotero JSON、EndNote XML 或 PaperFocus 文献库。")
+                showErrorAlert = true
+            }
+        }
     }
-    #endif
+
+    private func importPDFFiles(_ urls: [URL]) async throws {
+        guard !urls.isEmpty else { return }
+        isImportingPDF = true
+        defer { isImportingPDF = false }
+        var failures: [String] = []
+        for url in urls {
+            do {
+                try await importOnePDF(url)
+            } catch {
+                failures.append(error.localizedDescription)
+            }
+        }
+        refreshPapersFromStore()
+        if let message = failures.first {
+            throw LibraryImportError.zoteroAccountRejected(message)
+        }
+    }
 
     private func savePaper(_ paper: Paper) {
         modelContext.insert(paper)

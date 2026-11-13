@@ -12,11 +12,24 @@ import Foundation
 @MainActor
 private enum PaperFocusModelStore {
     static let container: ModelContainer = {
+        let configuration = ModelConfiguration()
+        let rejected = PaperFocusLibraryStore.shouldRejectDefaultStore()
+        UserDefaults.standard.set(rejected, forKey: AppSettings.paperFocusStoreRejectedKey)
         do {
+            if rejected {
+                let memory = ModelConfiguration(isStoredInMemoryOnly: true)
+                return try ModelContainer(
+                    for: Paper.self,
+                    ReadingSession.self,
+                    FocusTask.self,
+                    configurations: memory
+                )
+            }
             return try ModelContainer(
                 for: Paper.self,
                 ReadingSession.self,
-                FocusTask.self
+                FocusTask.self,
+                configurations: configuration
             )
         } catch {
             fatalError("PaperFocus could not open its library store: \(error)")
