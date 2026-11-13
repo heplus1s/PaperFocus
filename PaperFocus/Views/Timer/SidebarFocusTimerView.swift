@@ -1015,9 +1015,11 @@ struct SidebarFocusTimerView: View {
 
         guard let activeTask, activeTask.state == .running else { return }
 
-        timer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { _ in
+        let timer = Timer(timeInterval: 1, repeats: true) { _ in
             now = .now
         }
+        RunLoop.main.add(timer, forMode: .common)
+        self.timer = timer
     }
 
     private func stopUITimer() {

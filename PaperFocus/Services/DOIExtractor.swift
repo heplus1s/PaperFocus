@@ -12,7 +12,12 @@
 
 import Foundation
 
-enum DOIExtractor {
+nonisolated enum DOIExtractor {
+    nonisolated(unsafe) private static let doiPattern = try? NSRegularExpression(
+        pattern: #"10\.\d{4,9}/[-._;()/:A-Z0-9]+"#,
+        options: [.caseInsensitive]
+    )
+
     static func extractDOI(from url: URL, maxPages: Int = 3) -> String? {
         let text = PDFTextExtractor.extractText(from: url, maxPages: maxPages)
         return extractDOI(fromText: text)
@@ -26,12 +31,7 @@ enum DOIExtractor {
             .replacingOccurrences(of: "https://doi.org/", with: "")
             .replacingOccurrences(of: "http://doi.org/", with: "")
 
-        let pattern = #"10\.\d{4,9}/[-._;()/:A-Z0-9]+"#
-
-        guard let regex = try? NSRegularExpression(
-            pattern: pattern,
-            options: [.caseInsensitive]
-        ) else {
+        guard let regex = doiPattern else {
             return nil
         }
 

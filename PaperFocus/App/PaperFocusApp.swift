@@ -9,6 +9,21 @@ import SwiftUI
 import SwiftData
 import Foundation
 
+@MainActor
+private enum PaperFocusModelStore {
+    static let container: ModelContainer = {
+        do {
+            return try ModelContainer(
+                for: Paper.self,
+                ReadingSession.self,
+                FocusTask.self
+            )
+        } catch {
+            fatalError("PaperFocus could not open its library store: \(error)")
+        }
+    }()
+}
+
 @main
 struct PaperFocusApp: App {
     @AppStorage(AppSettings.appLanguageKey)
@@ -35,11 +50,7 @@ struct PaperFocusApp: App {
                     FocusLiveActivityActionRouter.handle(url)
                 }
         }
-        .modelContainer(for: [
-            Paper.self,
-            ReadingSession.self,
-            FocusTask.self
-        ])
+        .modelContainer(PaperFocusModelStore.container)
         #if os(macOS)
         .defaultSize(width: 1360, height: 760)
         .commands {
@@ -54,11 +65,7 @@ struct PaperFocusApp: App {
                 .environment(\.locale, appLocale)
                 .frame(width: 520, height: 460)
         }
-        .modelContainer(for: [
-            Paper.self,
-            ReadingSession.self,
-            FocusTask.self
-        ])
+        .modelContainer(PaperFocusModelStore.container)
 
         Window(aboutWindowTitle, id: AppWindowID.about) {
             NavigationStack {

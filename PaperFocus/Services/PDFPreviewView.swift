@@ -1659,13 +1659,7 @@ struct PDFKitContainer: UIViewRepresentable {
     }
 
     func updateUIView(_ uiView: PDFView, context: Context) {
-        if uiView.document?.documentURL != url {
-            uiView.document = PDFDocument(url: url)
-            DispatchQueue.main.async {
-                self.bridge.setDocumentURL(url)
-                self.bridge.syncFromPDFView()
-            }
-        }
+        context.coordinator.loadDocumentIfNeeded(into: uiView, url: url)
     }
 
     private func configure(_ pdfView: PDFView, coordinator: Coordinator) {
@@ -1676,7 +1670,6 @@ struct PDFKitContainer: UIViewRepresentable {
         pdfView.pageShadowsEnabled = false
         pdfView.backgroundColor = .clear
         pdfView.usePageViewController(false, withViewOptions: nil)
-        pdfView.document = PDFDocument(url: url)
 
         NotificationCenter.default.addObserver(
             coordinator,
@@ -1692,19 +1685,37 @@ struct PDFKitContainer: UIViewRepresentable {
             object: pdfView
         )
 
-        bridge.setDocumentURL(url)
         bridge.bind(pdfView: pdfView)
-
-        DispatchQueue.main.async {
-            self.bridge.syncFromPDFView()
-        }
+        coordinator.loadDocumentIfNeeded(into: pdfView, url: url)
     }
 
     final class Coordinator: NSObject {
         let bridge: PDFReaderBridge
+        private weak var activePDFView: PDFView?
+        private var loadedURL: URL?
+        private var loadID = UUID()
 
         init(bridge: PDFReaderBridge) {
             self.bridge = bridge
+        }
+
+        func loadDocumentIfNeeded(into pdfView: PDFView, url: URL) {
+            activePDFView = pdfView
+            if loadedURL == url { return }
+            loadedURL = url
+            let expectedID = UUID()
+            loadID = expectedID
+            bridge.setDocumentURL(url)
+
+            Task { @MainActor in
+                let loaded = await Task.detached(priority: .userInitiated) {
+                    PDFTextExtractor.loadDocument(at: url)
+                }.value
+                guard self.loadID == expectedID else { return }
+                guard let document = loaded.document else { return }
+                self.activePDFView?.document = document
+                self.bridge.syncFromPDFView()
+            }
         }
 
         @objc func selectionChanged(_ notification: Notification) {
@@ -1737,13 +1748,7 @@ struct PDFKitContainer: NSViewRepresentable {
     }
 
     func updateNSView(_ nsView: PDFView, context: Context) {
-        if nsView.document?.documentURL != url {
-            nsView.document = PDFDocument(url: url)
-            DispatchQueue.main.async {
-                self.bridge.setDocumentURL(url)
-                self.bridge.syncFromPDFView()
-            }
-        }
+        context.coordinator.loadDocumentIfNeeded(into: nsView, url: url)
     }
 
     private func configure(_ pdfView: PDFView, coordinator: Coordinator) {
@@ -1751,7 +1756,6 @@ struct PDFKitContainer: NSViewRepresentable {
         pdfView.displayMode = .singlePageContinuous
         pdfView.displayDirection = .vertical
         pdfView.displaysPageBreaks = true
-        pdfView.document = PDFDocument(url: url)
 
         NotificationCenter.default.addObserver(
             coordinator,
@@ -1767,19 +1771,37 @@ struct PDFKitContainer: NSViewRepresentable {
             object: pdfView
         )
 
-        bridge.setDocumentURL(url)
         bridge.bind(pdfView: pdfView)
-
-        DispatchQueue.main.async {
-            self.bridge.syncFromPDFView()
-        }
+        coordinator.loadDocumentIfNeeded(into: pdfView, url: url)
     }
 
     final class Coordinator: NSObject {
         let bridge: PDFReaderBridge
+        private weak var activePDFView: PDFView?
+        private var loadedURL: URL?
+        private var loadID = UUID()
 
         init(bridge: PDFReaderBridge) {
             self.bridge = bridge
+        }
+
+        func loadDocumentIfNeeded(into pdfView: PDFView, url: URL) {
+            activePDFView = pdfView
+            if loadedURL == url { return }
+            loadedURL = url
+            let expectedID = UUID()
+            loadID = expectedID
+            bridge.setDocumentURL(url)
+
+            Task { @MainActor in
+                let loaded = await Task.detached(priority: .userInitiated) {
+                    PDFTextExtractor.loadDocument(at: url)
+                }.value
+                guard self.loadID == expectedID else { return }
+                guard let document = loaded.document else { return }
+                self.activePDFView?.document = document
+                self.bridge.syncFromPDFView()
+            }
         }
 
         @objc func selectionChanged(_ notification: Notification) {

@@ -344,9 +344,11 @@ struct MacReadingAIDialogView: View {
             return extractedPDFText
         }
 
-        let text = await MainActor.run {
+        let accessHandle = SecurityScopedBookmarkStore.shared.beginAccess(forExternalFile: url)
+        defer { SecurityScopedBookmarkStore.shared.endAccess(accessHandle) }
+        let text = await Task.detached(priority: .userInitiated) {
             PDFTextExtractor.extractText(from: url, maxPages: 12)
-        }
+        }.value
         let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else {
             throw PaperChatError.emptyContent

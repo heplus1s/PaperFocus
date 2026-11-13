@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct PaperMetadata: Identifiable, Equatable {
+nonisolated struct PaperMetadata: Identifiable, Equatable, Sendable {
     let id = UUID()
 
     var title: String

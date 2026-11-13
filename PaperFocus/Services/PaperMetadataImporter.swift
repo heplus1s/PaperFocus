@@ -16,13 +16,13 @@ final class PaperMetadataImporter {
     private let crossrefService = CrossrefService()
 
     func importMetadata(from pdfURL: URL) async throws -> PaperMetadata {
-        let extractedText = PDFTextExtractor.extractText(from: pdfURL, maxPages: 4)
+        let extractedText = await Self.pdfText(from: pdfURL, maxPages: 4)
 
-        if let doi = DOIExtractor.extractDOI(from: pdfURL) {
+        if let doi = DOIExtractor.extractDOI(fromText: extractedText) {
             do {
                 return try await crossrefService.fetchMetadata(byDOI: doi)
             } catch {
-                print("DOI 匹配失败，转标题匹配：\(error.localizedDescription)")
+                // DOI lookup can fail for local-only papers. Fall through to the text already extracted.
             }
         }
 
@@ -51,12 +51,18 @@ final class PaperMetadataImporter {
         throw PaperMetadataImporterError.metadataNotFound
     }
 
-    static func localMetadata(from pdfURL: URL) -> PaperMetadata? {
+    nonisolated static func localMetadata(from pdfURL: URL) -> PaperMetadata? {
         let text = PDFTextExtractor.extractText(from: pdfURL, maxPages: 4)
         return localMetadata(fromExtractedText: text)
     }
 
-    static func localMetadata(fromExtractedText text: String) -> PaperMetadata? {
+    private nonisolated static func pdfText(from url: URL, maxPages: Int) async -> String {
+        await Task.detached(priority: .userInitiated) {
+            PDFTextExtractor.extractText(from: url, maxPages: maxPages)
+        }.value
+    }
+
+    nonisolated static func localMetadata(fromExtractedText text: String) -> PaperMetadata? {
         if let chineseMetadata = ChinesePaperMetadataExtractor.extractMetadata(from: text) {
             return chineseMetadata
         }
@@ -88,7 +94,7 @@ final class PaperMetadataImporter {
         Self.firstMeaningfulLine(from: text)
     }
 
-    private static func firstMeaningfulLine(from text: String) -> String? {
+    private nonisolated static func firstMeaningfulLine(from text: String) -> String? {
         if let chineseTitle = ChinesePaperMetadataExtractor.preferredTitleCandidate(from: text) {
             return chineseTitle
         }
@@ -109,7 +115,7 @@ final class PaperMetadataImporter {
         return filtered.first
     }
 
-    private static func extractYear(from text: String) -> Int? {
+    private nonisolated static func extractYear(from text: String) -> Int? {
         guard let regex = try? NSRegularExpression(pattern: #"\b((?:19|20)\d{2})\b"#) else {
             return nil
         }

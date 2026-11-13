@@ -61,7 +61,7 @@ struct LinkedZoteroLibraryLinkResult {
     let rootURL: URL
 }
 
-enum LibraryImportError: LocalizedError {
+nonisolated enum LibraryImportError: LocalizedError, Sendable {
     case invalidZoteroFile
     case invalidZoteroLibrary
     case invalidEndNoteFile
@@ -97,7 +97,7 @@ enum LibraryImportError: LocalizedError {
 }
 
 final class LibraryImportService {
-    func resolveZoteroLibraryRoot(from selectedURL: URL) throws -> URL {
+    nonisolated static func resolveZoteroLibraryRoot(from selectedURL: URL) throws -> URL {
         let fileManager = FileManager.default
         var candidateDirectories: [URL] = []
 
@@ -150,7 +150,7 @@ final class LibraryImportService {
         throw LibraryImportError.invalidZoteroLibrary
     }
 
-    func linkZoteroLibrary(from selectedURL: URL, into modelContext: ModelContext) throws -> LinkedZoteroLibraryLinkResult {
+    func linkZoteroLibrary(from selectedURL: URL, into modelContext: ModelContext) async throws -> LinkedZoteroLibraryLinkResult {
         let didAccess = selectedURL.startAccessingSecurityScopedResource()
         defer {
             if didAccess {
@@ -158,14 +158,18 @@ final class LibraryImportService {
             }
         }
 
-        let resolvedRootURL = try resolveZoteroLibraryRoot(from: selectedURL)
+        let resolvedRootURL = try await Self.readOffMain {
+            try LibraryImportService.resolveZoteroLibraryRoot(from: selectedURL)
+        }
         let bookmarkURL = selectedURL.standardizedFileURL
         try SecurityScopedBookmarkStore.shared.saveBookmark(
             for: .zoteroLocal,
             url: bookmarkURL,
             associatedRootPath: resolvedRootURL.standardizedFileURL.path
         )
-        let records = try parseLinkedZoteroRecords(from: resolvedRootURL)
+        let records = try await Self.readOffMain {
+            try LibraryImportService.parseLinkedZoteroRecords(from: resolvedRootURL)
+        }
         let summary = try persistLinkedSnapshot(
             records: records,
             into: modelContext,
@@ -177,7 +181,7 @@ final class LibraryImportService {
         return LinkedZoteroLibraryLinkResult(summary: summary, rootURL: resolvedRootURL)
     }
 
-    func refreshLinkedZoteroLibrary(into modelContext: ModelContext) throws -> LibraryImportSummary {
+    func refreshLinkedZoteroLibrary(into modelContext: ModelContext) async throws -> LibraryImportSummary {
         guard let handle = SecurityScopedBookmarkStore.shared.beginAccess(for: .zoteroLocal) else {
             throw LibraryImportError.zoteroAccessDenied
         }
@@ -186,7 +190,9 @@ final class LibraryImportService {
         }
 
         let rootURL = try storedLinkedZoteroRootURL()
-        let records = try parseLinkedZoteroRecords(from: rootURL)
+        let records = try await Self.readOffMain {
+            try LibraryImportService.parseLinkedZoteroRecords(from: rootURL)
+        }
         return try persistLinkedSnapshot(
             records: records,
             into: modelContext,
@@ -197,7 +203,7 @@ final class LibraryImportService {
         )
     }
 
-    func importZotero(from url: URL, into modelContext: ModelContext) throws -> LibraryImportSummary {
+    func importZotero(from url: URL, into modelContext: ModelContext) async throws -> LibraryImportSummary {
         let didAccess = url.startAccessingSecurityScopedResource()
         defer {
             if didAccess {
@@ -205,13 +211,16 @@ final class LibraryImportService {
             }
         }
 
-        let data = try Data(contentsOf: url)
-        let json = try JSONSerialization.jsonObject(with: data)
-        let records = try parseZoteroRecords(from: json, sourceURL: url)
-        return try persist(records: records, into: modelContext, copyAttachmentsToLibrary: true)
+        let records = try await Self.readOffMain {
+            let data = try Data(contentsOf: url)
+            let json = try JSONSerialization.jsonObject(with: data)
+            let parsed = try LibraryImportService.parseZoteroRecords(from: json, sourceURL: url)
+            return LibraryImportService.storingCopiesInLibrary(parsed)
+        }
+        return try persist(records: records, into: modelContext, copyAttachmentsToLibrary: false)
     }
 
-    func linkEndNoteXML(from url: URL, into modelContext: ModelContext) throws -> LibraryImportSummary {
+    func linkEndNoteXML(from url: URL, into modelContext: ModelContext) async throws -> LibraryImportSummary {
         let didAccess = url.startAccessingSecurityScopedResource()
         defer {
             if didAccess {
@@ -220,8 +229,10 @@ final class LibraryImportService {
         }
 
         try SecurityScopedBookmarkStore.shared.saveBookmark(for: .endNoteXML, url: url.deletingLastPathComponent())
-        let data = try Data(contentsOf: url)
-        let records = try EndNoteXMLImportParser(sourceURL: url, importMethod: "endnoteLinked").parse(data: data)
+        let records = try await Self.readOffMain {
+            let data = try Data(contentsOf: url)
+            return try EndNoteXMLImportParser(sourceURL: url, importMethod: "endnoteLinked").parse(data: data)
+        }
         return try persistLinkedSnapshot(
             records: records,
             into: modelContext,
@@ -232,7 +243,7 @@ final class LibraryImportService {
         )
     }
 
-    func refreshLinkedEndNoteXML(from linkedXMLPath: String, into modelContext: ModelContext) throws -> LibraryImportSummary {
+    func refreshLinkedEndNoteXML(from linkedXMLPath: String, into modelContext: ModelContext) async throws -> LibraryImportSummary {
         guard let handle = SecurityScopedBookmarkStore.shared.beginAccess(for: .endNoteXML) else {
             throw LibraryImportError.invalidEndNoteFile
         }
@@ -241,8 +252,10 @@ final class LibraryImportService {
         }
 
         let url = URL(fileURLWithPath: linkedXMLPath)
-        let data = try Data(contentsOf: url)
-        let records = try EndNoteXMLImportParser(sourceURL: url, importMethod: "endnoteLinked").parse(data: data)
+        let records = try await Self.readOffMain {
+            let data = try Data(contentsOf: url)
+            return try EndNoteXMLImportParser(sourceURL: url, importMethod: "endnoteLinked").parse(data: data)
+        }
         return try persistLinkedSnapshot(
             records: records,
             into: modelContext,
@@ -253,7 +266,7 @@ final class LibraryImportService {
         )
     }
 
-    func importEndNoteXML(from url: URL, into modelContext: ModelContext) throws -> LibraryImportSummary {
+    func importEndNoteXML(from url: URL, into modelContext: ModelContext) async throws -> LibraryImportSummary {
         let didAccess = url.startAccessingSecurityScopedResource()
         defer {
             if didAccess {
@@ -261,12 +274,15 @@ final class LibraryImportService {
             }
         }
 
-        let data = try Data(contentsOf: url)
-        let records = try EndNoteXMLImportParser(sourceURL: url).parse(data: data)
-        return try persist(records: records, into: modelContext, copyAttachmentsToLibrary: true)
+        let records = try await Self.readOffMain {
+            let data = try Data(contentsOf: url)
+            let parsed = try EndNoteXMLImportParser(sourceURL: url).parse(data: data)
+            return LibraryImportService.storingCopiesInLibrary(parsed)
+        }
+        return try persist(records: records, into: modelContext, copyAttachmentsToLibrary: false)
     }
 
-    func importPDFFolder(from rootURL: URL, into modelContext: ModelContext) throws -> LibraryImportSummary {
+    func importPDFFolder(from rootURL: URL, into modelContext: ModelContext) async throws -> LibraryImportSummary {
         let didAccess = rootURL.startAccessingSecurityScopedResource()
         defer {
             if didAccess {
@@ -274,6 +290,20 @@ final class LibraryImportService {
             }
         }
 
+        let records = try await Self.readOffMain {
+            let collected = try LibraryImportService.collectPDFFolderRecords(from: rootURL)
+            return LibraryImportService.storingCopiesInLibrary(collected)
+        }
+        return try persist(records: records, into: modelContext, copyAttachmentsToLibrary: false)
+    }
+
+    private nonisolated static func readOffMain<T: Sendable>(_ work: @escaping @Sendable () throws -> T) async throws -> T {
+        try await Task.detached(priority: .userInitiated) {
+            try work()
+        }.value
+    }
+
+    private nonisolated static func collectPDFFolderRecords(from rootURL: URL) throws -> [ImportedPaperRecord] {
         let fileManager = FileManager.default
         guard let enumerator = fileManager.enumerator(
             at: rootURL,
@@ -358,10 +388,10 @@ final class LibraryImportService {
             throw LibraryImportError.noSupportedRecords
         }
 
-        return try persist(records: records, into: modelContext, copyAttachmentsToLibrary: true)
+        return records
     }
 
-    private func parseZoteroRecords(from json: Any, sourceURL: URL) throws -> [ImportedPaperRecord] {
+    private nonisolated static func parseZoteroRecords(from json: Any, sourceURL: URL) throws -> [ImportedPaperRecord] {
         let baseDirectory = sourceURL.deletingLastPathComponent()
 
         let rootDictionary = json as? [String: Any]
@@ -509,7 +539,8 @@ final class LibraryImportService {
         copyAttachmentsToLibrary: Bool
     ) throws -> LibraryImportSummary {
         let descriptor = FetchDescriptor<Paper>()
-        var existingPapers = try modelContext.fetch(descriptor)
+        let existingPapers = try modelContext.fetch(descriptor)
+        var lookup = PaperLookup(papers: existingPapers)
         var summary = LibraryImportSummary()
 
         for record in records {
@@ -518,14 +549,15 @@ final class LibraryImportService {
                 continue
             }
 
-            if let existing = matchingPaper(for: record, in: existingPapers) {
+            if let existing = lookup.match(record) {
                 apply(record: record, to: existing, preferExistingContent: true, copyAttachmentsToLibrary: copyAttachmentsToLibrary)
+                lookup.note(existing)
                 summary.updatedCount += 1
             } else {
                 let paper = Paper()
                 apply(record: record, to: paper, preferExistingContent: false, copyAttachmentsToLibrary: copyAttachmentsToLibrary)
                 modelContext.insert(paper)
-                existingPapers.append(paper)
+                lookup.note(paper)
                 summary.importedCount += 1
             }
         }
@@ -577,25 +609,58 @@ final class LibraryImportService {
         return summary
     }
 
-    private func matchingPaper(for record: ImportedPaperRecord, in papers: [Paper]) -> Paper? {
-        if !record.doi.isEmpty,
-           let paper = papers.first(where: { normalize($0.doi) == normalize(record.doi) }) {
-            return paper
+    private struct PaperLookup {
+        private var byDOI: [String: Paper] = [:]
+        private var bySource: [String: Paper] = [:]
+        private var byText: [String: Paper] = [:]
+
+        init(papers: [Paper]) {
+            papers.forEach { note($0) }
         }
 
-        if !record.sourceRecordID.isEmpty,
-           let paper = papers.first(where: {
-               normalize($0.sourceRecordID) == normalize(record.sourceRecordID)
-               && normalize($0.sourceLibraryType) == normalize(record.sourceLibraryType)
-           }) {
-            return paper
+        mutating func note(_ paper: Paper) {
+            let doi = normalized(paper.doi)
+            if !doi.isEmpty, byDOI[doi] == nil {
+                byDOI[doi] = paper
+            }
+
+            let sourceID = normalized(paper.sourceRecordID)
+            if !sourceID.isEmpty {
+                let key = normalized(paper.sourceLibraryType) + "\u{1f}" + sourceID
+                if bySource[key] == nil {
+                    bySource[key] = paper
+                }
+            }
+
+            let title = normalized(paper.title)
+            guard !title.isEmpty else { return }
+            let yearPart = paper.year.map(String.init) ?? ""
+            let key = title + "\u{1f}" + normalized(paper.authors) + "\u{1f}" + yearPart
+            if byText[key] == nil {
+                byText[key] = paper
+            }
         }
 
-        return papers.first(where: {
-            normalize($0.title) == normalize(record.title)
-            && normalize($0.authors) == normalize(record.authors)
-            && $0.year == record.year
-        })
+        func match(_ record: ImportedPaperRecord) -> Paper? {
+            let doi = normalized(record.doi)
+            if !doi.isEmpty, let paper = byDOI[doi] {
+                return paper
+            }
+
+            let sourceID = normalized(record.sourceRecordID)
+            if !sourceID.isEmpty, let paper = bySource[normalized(record.sourceLibraryType) + "\u{1f}" + sourceID] {
+                return paper
+            }
+
+            let title = normalized(record.title)
+            guard !title.isEmpty else { return nil }
+            let yearPart = record.year.map(String.init) ?? ""
+            return byText[title + "\u{1f}" + normalized(record.authors) + "\u{1f}" + yearPart]
+        }
+
+        private func normalized(_ text: String) -> String {
+            text.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        }
     }
 
     private func apply(
@@ -684,6 +749,24 @@ final class LibraryImportService {
         paper.updatedAt = .now
     }
 
+    private nonisolated static func storingCopiesInLibrary(_ records: [ImportedPaperRecord]) -> [ImportedPaperRecord] {
+        records.map { record in
+            guard let sourceURL = record.attachmentURL else { return record }
+            guard let copiedURL = try? PaperFileService.importPDFToLibrary(from: sourceURL) else {
+                var unavailable = record
+                unavailable.attachmentURL = nil
+                unavailable.hasPDF = false
+                return unavailable
+            }
+
+            var stored = record
+            stored.attachmentURL = copiedURL
+            stored.fileSize = fileSize(for: copiedURL)
+            stored.hasPDF = true
+            return stored
+        }
+    }
+
     private func prepareAttachment(from url: URL?, copyAttachmentsToLibrary: Bool) -> PreparedAttachment? {
         guard let url, url.pathExtension.lowercased() == "pdf" else { return nil }
 
@@ -705,7 +788,7 @@ final class LibraryImportService {
         )
     }
 
-    private func makeStandaloneAttachmentRecord(
+    private nonisolated static func makeStandaloneAttachmentRecord(
         sourceLibraryType: String,
         sourceLibraryName: String,
         sourceRecordID: String,
@@ -866,7 +949,7 @@ final class LibraryImportService {
         return key.isEmpty ? UUID().uuidString : key
     }
 
-    private func relativeCollectionPath(for directoryURL: URL, rootURL: URL) -> String {
+    private nonisolated static func relativeCollectionPath(for directoryURL: URL, rootURL: URL) -> String {
         let rootComponents = rootURL.standardizedFileURL.pathComponents
         let directoryComponents = directoryURL.standardizedFileURL.pathComponents
         guard directoryComponents.count >= rootComponents.count else { return "" }
@@ -875,7 +958,7 @@ final class LibraryImportService {
         return relativeComponents.joined(separator: "/")
     }
 
-    private func creatorsText(from rawCreators: Any?, allowedTypes: Set<String>) -> String {
+    private nonisolated static func creatorsText(from rawCreators: Any?, allowedTypes: Set<String>) -> String {
         guard let creators = rawCreators as? [[String: Any]] else { return "" }
 
         return creators.compactMap { creator in
@@ -895,7 +978,7 @@ final class LibraryImportService {
         .joined(separator: ", ")
     }
 
-    private func zoteroTagsText(from rawTags: Any?) -> String {
+    private nonisolated static func zoteroTagsText(from rawTags: Any?) -> String {
         guard let tags = rawTags as? [Any] else { return "" }
 
         let values = tags.compactMap { item -> String? in
@@ -911,7 +994,7 @@ final class LibraryImportService {
         return values.filter { !$0.isEmpty }.joined(separator: "; ")
     }
 
-    private func combinedNotes(_ rawNotes: Any?, extraNotes: [String]) -> String {
+    private nonisolated static func combinedNotes(_ rawNotes: Any?, extraNotes: [String]) -> String {
         var parts: [String] = []
 
         if let notes = rawNotes as? [Any] {
@@ -931,7 +1014,7 @@ final class LibraryImportService {
         return parts.filter { !$0.isEmpty }.joined(separator: "\n\n")
     }
 
-    private func makeZoteroAttachmentMap(from items: [[String: Any]], baseDirectory: URL) -> [String: URL] {
+    private nonisolated static func makeZoteroAttachmentMap(from items: [[String: Any]], baseDirectory: URL) -> [String: URL] {
         var result: [String: URL] = [:]
 
         for item in items {
@@ -946,7 +1029,7 @@ final class LibraryImportService {
         return result
     }
 
-    private func makeZoteroNotesMap(from items: [[String: Any]]) -> [String: [String]] {
+    private nonisolated static func makeZoteroNotesMap(from items: [[String: Any]]) -> [String: [String]] {
         var result: [String: [String]] = [:]
 
         for item in items {
@@ -961,7 +1044,7 @@ final class LibraryImportService {
         return result
     }
 
-    private func resolvePrimaryPDFURL(from item: [String: Any], baseDirectory: URL) -> URL? {
+    private nonisolated static func resolvePrimaryPDFURL(from item: [String: Any], baseDirectory: URL) -> URL? {
         if let attachments = item["attachments"] as? [[String: Any]] {
             for attachment in attachments {
                 if let url = resolveAttachmentURL(from: attachment, baseDirectory: baseDirectory) {
@@ -973,7 +1056,7 @@ final class LibraryImportService {
         return resolveAttachmentURL(from: item, baseDirectory: baseDirectory)
     }
 
-    private func resolveAttachmentURL(from dictionary: [String: Any], baseDirectory: URL) -> URL? {
+    private nonisolated static func resolveAttachmentURL(from dictionary: [String: Any], baseDirectory: URL) -> URL? {
         let candidates = [
             stringValue(dictionary["localPath"]),
             stringValue(dictionary["path"]),
@@ -993,7 +1076,7 @@ final class LibraryImportService {
         return nil
     }
 
-    private func resolvePath(_ rawValue: String, baseDirectory: URL) -> URL? {
+    private nonisolated static func resolvePath(_ rawValue: String, baseDirectory: URL) -> URL? {
         let value = rawValue.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !value.isEmpty else { return nil }
 
@@ -1014,7 +1097,7 @@ final class LibraryImportService {
         return baseDirectory.appendingPathComponent(value)
     }
 
-    private func makeZoteroCollectionMap(from rawCollections: Any?) -> [String: ZoteroCollectionNode] {
+    private nonisolated static func makeZoteroCollectionMap(from rawCollections: Any?) -> [String: ZoteroCollectionNode] {
         var map: [String: ZoteroCollectionNode] = [:]
 
         if let dictionary = rawCollections as? [String: Any] {
@@ -1042,7 +1125,7 @@ final class LibraryImportService {
         return map
     }
 
-    private func resolveCollectionPaths(from rawCollections: Any?, collectionMap: [String: ZoteroCollectionNode]) -> [String] {
+    private nonisolated static func resolveCollectionPaths(from rawCollections: Any?, collectionMap: [String: ZoteroCollectionNode]) -> [String] {
         let keys: [String]
         if let values = rawCollections as? [String] {
             keys = values
@@ -1075,7 +1158,7 @@ final class LibraryImportService {
         return uniqueStrings(paths)
     }
 
-    private func buildCollectionPath(
+    private nonisolated static func buildCollectionPath(
         for node: ZoteroCollectionNode,
         collectionMap: [String: ZoteroCollectionNode],
         visited: Set<String>
@@ -1094,13 +1177,13 @@ final class LibraryImportService {
         return trimmedName
     }
 
-    private func stripHTML(from text: String) -> String {
+    private nonisolated static func stripHTML(from text: String) -> String {
         text
             .replacingOccurrences(of: "<[^>]+>", with: "", options: .regularExpression)
             .trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
-    private func extractYear(from text: String) -> Int? {
+    private nonisolated static func extractYear(from text: String) -> Int? {
         guard let regex = try? NSRegularExpression(pattern: #"\b((?:19|20)\d{2})\b"#) else {
             return nil
         }
@@ -1115,7 +1198,7 @@ final class LibraryImportService {
         return Int(text[valueRange])
     }
 
-    private func stringValue(_ raw: Any?) -> String {
+    private nonisolated static func stringValue(_ raw: Any?) -> String {
         if let string = raw as? String {
             return string.trimmingCharacters(in: .whitespacesAndNewlines)
         }
@@ -1125,17 +1208,17 @@ final class LibraryImportService {
         return ""
     }
 
-    private func firstNonEmpty(_ values: [String]) -> String {
+    private nonisolated static func firstNonEmpty(_ values: [String]) -> String {
         values.first(where: { !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }) ?? ""
     }
 
-    private func fileSize(for url: URL?) -> Int64 {
+    private nonisolated static func fileSize(for url: URL?) -> Int64 {
         guard let url else { return 0 }
         let attributes = try? FileManager.default.attributesOfItem(atPath: url.path)
         return (attributes?[.size] as? NSNumber)?.int64Value ?? 0
     }
 
-    private func parseLinkedZoteroRecords(from rootURL: URL) throws -> [ImportedPaperRecord] {
+    private nonisolated static func parseLinkedZoteroRecords(from rootURL: URL) throws -> [ImportedPaperRecord] {
         let databaseURL = rootURL.appendingPathComponent("zotero.sqlite")
         guard FileManager.default.fileExists(atPath: databaseURL.path) else {
             throw LibraryImportError.invalidZoteroLibrary
@@ -1406,7 +1489,7 @@ final class LibraryImportService {
         return records
     }
 
-    private func createZoteroDatabaseSnapshot(from rootURL: URL) throws -> ZoteroDatabaseSnapshot {
+    private nonisolated static func createZoteroDatabaseSnapshot(from rootURL: URL) throws -> ZoteroDatabaseSnapshot {
         let fileManager = FileManager.default
         let sourceDatabaseURL = rootURL.appendingPathComponent("zotero.sqlite")
         let snapshotDirectoryURL = fileManager.temporaryDirectory
@@ -1414,33 +1497,72 @@ final class LibraryImportService {
 
         do {
             try fileManager.createDirectory(at: snapshotDirectoryURL, withIntermediateDirectories: true)
-
             let snapshotDatabaseURL = snapshotDirectoryURL.appendingPathComponent("zotero.sqlite")
-            try fileManager.copyItem(at: sourceDatabaseURL, to: snapshotDatabaseURL)
-
-            let sidecarFileNames = [
-                "zotero.sqlite-wal",
-                "zotero.sqlite-shm"
-            ]
-
-            for fileName in sidecarFileNames {
-                let sourceURL = rootURL.appendingPathComponent(fileName)
-                guard fileManager.fileExists(atPath: sourceURL.path) else { continue }
-                let destinationURL = snapshotDirectoryURL.appendingPathComponent(fileName)
-                try? fileManager.copyItem(at: sourceURL, to: destinationURL)
-            }
-
+            try backupSQLiteDatabase(from: sourceDatabaseURL, to: snapshotDatabaseURL)
             return ZoteroDatabaseSnapshot(
                 directoryURL: snapshotDirectoryURL,
                 databaseURL: snapshotDatabaseURL
             )
+        } catch let error as LibraryImportError {
+            try? fileManager.removeItem(at: snapshotDirectoryURL)
+            throw error
         } catch {
             try? fileManager.removeItem(at: snapshotDirectoryURL)
             throw LibraryImportError.zoteroSnapshotFailed(error.localizedDescription)
         }
     }
 
-    private func fetchZoteroCreatorRows(using connection: SQLiteConnection) throws -> [SQLiteRow] {
+    private nonisolated static func backupSQLiteDatabase(from sourceURL: URL, to destinationURL: URL) throws {
+        var sourcePointer: OpaquePointer?
+        var destinationPointer: OpaquePointer?
+        guard sqlite3_open_v2(sourceURL.path, &sourcePointer, SQLITE_OPEN_READONLY, nil) == SQLITE_OK else {
+            let message = sourcePointer.map { String(cString: sqlite3_errmsg($0)) } ?? "无法打开源数据库"
+            if let sourcePointer {
+                sqlite3_close(sourcePointer)
+            }
+            throw LibraryImportError.zoteroSnapshotFailed(message)
+        }
+        guard let source = sourcePointer else {
+            throw LibraryImportError.zoteroSnapshotFailed("无法打开源数据库")
+        }
+        defer { sqlite3_close(source) }
+
+        let destinationFlags = SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE
+        guard sqlite3_open_v2(destinationURL.path, &destinationPointer, destinationFlags, nil) == SQLITE_OK else {
+            let message = destinationPointer.map { String(cString: sqlite3_errmsg($0)) } ?? "无法创建快照数据库"
+            if let destinationPointer {
+                sqlite3_close(destinationPointer)
+            }
+            throw LibraryImportError.zoteroSnapshotFailed(message)
+        }
+        guard let destination = destinationPointer else {
+            throw LibraryImportError.zoteroSnapshotFailed("无法创建快照数据库")
+        }
+        defer { sqlite3_close(destination) }
+
+        guard let backup = sqlite3_backup_init(destination, "main", source, "main") else {
+            throw LibraryImportError.zoteroSnapshotFailed(String(cString: sqlite3_errmsg(destination)))
+        }
+
+        var stepResult: Int32 = SQLITE_OK
+        var busyAttempts = 0
+        repeat {
+            stepResult = sqlite3_backup_step(backup, 128)
+            if stepResult == SQLITE_BUSY || stepResult == SQLITE_LOCKED {
+                sqlite3_sleep(25)
+                busyAttempts += 1
+            } else {
+                break
+            }
+        } while busyAttempts < 40
+
+        let finishResult = sqlite3_backup_finish(backup)
+        guard stepResult == SQLITE_DONE, finishResult == SQLITE_OK else {
+            throw LibraryImportError.zoteroSnapshotFailed(String(cString: sqlite3_errmsg(destination)))
+        }
+    }
+
+    private nonisolated static func fetchZoteroCreatorRows(using connection: SQLiteConnection) throws -> [SQLiteRow] {
         let creatorTypeColumn = try zoteroCreatorTypeColumn(using: connection)
 
         if connection.tableExists("creatorData") {
@@ -1482,7 +1604,7 @@ final class LibraryImportService {
         """)
     }
 
-    private func zoteroCreatorTypeColumn(using connection: SQLiteConnection) throws -> String {
+    private nonisolated static func zoteroCreatorTypeColumn(using connection: SQLiteConnection) throws -> String {
         let columns = connection.columnNames(in: "creatorTypes")
         if columns.contains("creatorType") {
             return "creatorType"
@@ -1508,7 +1630,7 @@ final class LibraryImportService {
         throw LibraryImportError.invalidZoteroLibrary
     }
 
-    private func resolveLinkedZoteroAttachment(path: String, attachmentKey: String, rootURL: URL) -> URL? {
+    private nonisolated static func resolveLinkedZoteroAttachment(path: String, attachmentKey: String, rootURL: URL) -> URL? {
         let trimmed = path.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return nil }
 
@@ -1543,7 +1665,7 @@ final class LibraryImportService {
         return rootURL.appendingPathComponent(trimmed)
     }
 
-    private func buildZoteroCollectionPath(
+    private nonisolated static func buildZoteroCollectionPath(
         collectionID: Int64,
         names: [Int64: String],
         parents: [Int64: Int64]
@@ -1564,7 +1686,7 @@ final class LibraryImportService {
         return components.joined(separator: "/")
     }
 
-    private func formatCreators(_ creators: [ZoteroCreatorRow], types: Set<String>) -> String {
+    private nonisolated static func formatCreators(_ creators: [ZoteroCreatorRow], types: Set<String>) -> String {
         creators.compactMap { creator in
             guard types.contains(creator.creatorType) else { return nil }
             if creator.fieldMode == 1 {
@@ -1577,7 +1699,7 @@ final class LibraryImportService {
         .joined(separator: ", ")
     }
 
-    private func uniqueStrings(_ values: [String]) -> [String] {
+    private nonisolated static func uniqueStrings(_ values: [String]) -> [String] {
         var seen: Set<String> = []
         var result: [String] = []
 
@@ -1590,7 +1712,7 @@ final class LibraryImportService {
     }
 }
 
-private struct ImportedPaperRecord {
+nonisolated private struct ImportedPaperRecord: Sendable {
     let sourceLibraryType: String
     let sourceLibraryName: String
     let sourceRecordID: String
@@ -1639,11 +1761,11 @@ private struct ImportedPaperRecord {
     let tagsText: String
     let collectionPaths: [String]
     let priority: String
-    let attachmentURL: URL?
+    var attachmentURL: URL?
     let sourceAttachmentPath: String
     let fileType: String
-    let fileSize: Int64
-    let hasPDF: Bool
+    var fileSize: Int64
+    var hasPDF: Bool
     let isInTrash: Bool
     let isUnfiled: Bool
     let isPublicationItem: Bool
@@ -1655,27 +1777,27 @@ private struct ImportedPaperRecord {
     }
 }
 
-private struct PreparedAttachment {
+nonisolated private struct PreparedAttachment {
     let path: String
     let fileName: String
     let fileType: String
     let fileSize: Int64
 }
 
-private struct ZoteroCollectionNode {
+nonisolated private struct ZoteroCollectionNode {
     let key: String
     let name: String
     let parentKey: String
 }
 
-private struct ZoteroCreatorRow {
+nonisolated private struct ZoteroCreatorRow {
     let creatorType: String
     let firstName: String
     let lastName: String
     let fieldMode: Int64
 }
 
-private final class EndNoteXMLImportParser: NSObject, XMLParserDelegate {
+nonisolated private final class EndNoteXMLImportParser: NSObject, XMLParserDelegate {
     private let sourceURL: URL
     private let importMethod: String
     private var records: [ImportedPaperRecord] = []
@@ -1931,7 +2053,7 @@ private final class EndNoteXMLImportParser: NSObject, XMLParserDelegate {
     }
 }
 
-private struct EndNoteWorkingRecord {
+nonisolated private struct EndNoteWorkingRecord {
     var sourceRecordID: String = ""
     var refTypeName: String = ""
     var title: String = ""
@@ -1956,7 +2078,7 @@ private struct EndNoteWorkingRecord {
     var publisher: String = ""
 }
 
-private struct SQLiteRow {
+nonisolated private struct SQLiteRow {
     fileprivate let values: [String: String]
 
     func string(_ column: String) -> String {
@@ -1968,7 +2090,7 @@ private struct SQLiteRow {
     }
 }
 
-private struct ZoteroDatabaseSnapshot {
+nonisolated private struct ZoteroDatabaseSnapshot {
     let directoryURL: URL
     let databaseURL: URL
 
@@ -1977,7 +2099,7 @@ private struct ZoteroDatabaseSnapshot {
     }
 }
 
-private final class SQLiteConnection {
+nonisolated private final class SQLiteConnection {
     private var database: OpaquePointer?
 
     init(url: URL) throws {
@@ -1989,6 +2111,10 @@ private final class SQLiteConnection {
             }
             throw LibraryImportError.zoteroDatabaseOpenFailed(message)
         }
+    }
+
+    deinit {
+        close()
     }
 
     func close() {
@@ -2005,7 +2131,9 @@ private final class SQLiteConnection {
 
         var statement: OpaquePointer?
         guard sqlite3_prepare_v2(database, sql, -1, &statement, nil) == SQLITE_OK else {
-            throw LibraryImportError.zoteroQueryFailed(String(cString: sqlite3_errmsg(database)))
+            let message = String(cString: sqlite3_errmsg(database))
+            sqlite3_finalize(statement)
+            throw LibraryImportError.zoteroQueryFailed(message)
         }
 
         defer {
@@ -2013,7 +2141,15 @@ private final class SQLiteConnection {
         }
 
         var rows: [SQLiteRow] = []
-        while sqlite3_step(statement) == SQLITE_ROW {
+        while true {
+            let result = sqlite3_step(statement)
+            if result == SQLITE_DONE {
+                break
+            }
+            guard result == SQLITE_ROW else {
+                throw LibraryImportError.zoteroQueryFailed(String(cString: sqlite3_errmsg(database)))
+            }
+
             let columnCount = sqlite3_column_count(statement)
             var values: [String: String] = [:]
 

@@ -629,7 +629,7 @@ struct SettingsView: View {
         ) else { return }
 
         performLibraryImport {
-            let result = try libraryImportService.linkZoteroLibrary(from: url, into: modelContext)
+            let result = try await libraryImportService.linkZoteroLibrary(from: url, into: modelContext)
             zoteroLinkedDisplayPath = result.rootURL.path
             zoteroLinkedDisplayName = result.rootURL.lastPathComponent
             let summary = result.summary
@@ -640,7 +640,7 @@ struct SettingsView: View {
 
     private func refreshLinkedZoteroLibrary() {
         performLibraryImport {
-            let summary = try libraryImportService.refreshLinkedZoteroLibrary(into: modelContext)
+            let summary = try await libraryImportService.refreshLinkedZoteroLibrary(into: modelContext)
             libraryImportMessage = summary.syncMessage
             return summary
         }
@@ -662,7 +662,7 @@ struct SettingsView: View {
         ) else { return }
 
         performLibraryImport {
-            let summary = try libraryImportService.linkEndNoteXML(from: url, into: modelContext)
+            let summary = try await libraryImportService.linkEndNoteXML(from: url, into: modelContext)
             endNoteLinkedDisplayPath = url.path
             endNoteLinkedDisplayName = url.lastPathComponent
             libraryImportMessage = summary.syncMessage
@@ -673,7 +673,7 @@ struct SettingsView: View {
     private func refreshLinkedEndNoteLibrary() {
         guard !endNoteLinkedDisplayPath.isEmpty else { return }
         performLibraryImport {
-            let summary = try libraryImportService.refreshLinkedEndNoteXML(from: endNoteLinkedDisplayPath, into: modelContext)
+            let summary = try await libraryImportService.refreshLinkedEndNoteXML(from: endNoteLinkedDisplayPath, into: modelContext)
             libraryImportMessage = summary.syncMessage
             return summary
         }
@@ -695,7 +695,7 @@ struct SettingsView: View {
         ) else { return }
 
         performLibraryImport {
-            try libraryImportService.importZotero(from: url, into: modelContext)
+            try await libraryImportService.importZotero(from: url, into: modelContext)
         }
     }
 
@@ -707,7 +707,7 @@ struct SettingsView: View {
         ) else { return }
 
         performLibraryImport {
-            try libraryImportService.importEndNoteXML(from: url, into: modelContext)
+            try await libraryImportService.importEndNoteXML(from: url, into: modelContext)
         }
     }
 
@@ -718,24 +718,26 @@ struct SettingsView: View {
         ) else { return }
 
         performLibraryImport {
-            try libraryImportService.importPDFFolder(from: url, into: modelContext)
+            try await libraryImportService.importPDFFolder(from: url, into: modelContext)
         }
     }
 
-    private func performLibraryImport(_ operation: () throws -> LibraryImportSummary) {
+    private func performLibraryImport(_ operation: @escaping @MainActor () async throws -> LibraryImportSummary) {
         isImportingLibrary = true
         libraryImportMessage = ""
-        defer { isImportingLibrary = false }
 
-        do {
-            let summary = try operation()
-            if libraryImportMessage.isEmpty {
-                libraryImportMessage = summary.importMessage
+        Task {
+            do {
+                let summary = try await operation()
+                if libraryImportMessage.isEmpty {
+                    libraryImportMessage = summary.importMessage
+                }
+                showLibraryImportAlert = true
+            } catch {
+                libraryImportMessage = error.localizedDescription
+                showLibraryImportAlert = true
             }
-            showLibraryImportAlert = true
-        } catch {
-            libraryImportMessage = error.localizedDescription
-            showLibraryImportAlert = true
+            isImportingLibrary = false
         }
     }
 

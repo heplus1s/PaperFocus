@@ -70,57 +70,17 @@
 		BCAD72352F79813300C2F253 /* Exceptions for "PaperFocus" folder in "PaperFocus" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
-				App/AppNavigationState.swift,
-				App/PaperFocusApp.swift,
-				App/RootTabView.swift,
-				Components/PaperCardView.swift,
-				Components/ResumeFocusToolbarButton.swift,
-				Components/SectionHeaderView.swift,
-				Components/TagChipView.swift,
-				Components/TimerCircleView.swift,
-				Models/FocusLiveActivityAttributes.swift,
-				Models/FocusTask.swift,
-				Models/Paper.swift,
-				Models/PaperMetadata.swift,
-				Models/PaperStatus.swift,
-				Models/ReadingNote.swift,
-				Models/ReadingSession.swift,
-				Models/Tag.swift,
-				Resources/AppConstants.swift,
-				Resources/AppSettings.swift,
-				Resources/Assets.xcassets,
-				Services/ChinesePaperMetadataExtractor.swift,
-				Services/CrossrefServices.swift,
-				Services/DOIExtractor.swift,
-				Services/FocusLiveActivityActionRouter.swift,
-				Services/FocusLiveActivityManager.swift,
-				Services/LibraryImportService.swift,
-				Services/PaperFileService.swift,
-				Services/PaperMetadataImporter.swift,
-				Services/PaperSummaryService.swift,
-				Services/PDFPicker.swift,
-				Services/PDFPreviewView.swift,
-				Services/PDFService.swift,
-				Services/PDFTextExtractor.swift,
-				Services/SampleDataService.swift,
-				Services/SecurityScopedBookmarkStore.swift,
-				Services/TimerService.swift,
-				ViewModels/HomeViewModel.swift,
-				ViewModels/LibraryViewModel.swift,
-				ViewModels/TimerViewModel.swift,
-				Views/Home/HomeView.swift,
-				Views/Library/AddPaperView.swift,
-				Views/Library/LibraryView.swift,
-				Views/Library/PaperDatailView.swift,
-				Views/Library/PaperDropZoneView.swift,
-				Views/Library/PaperInspectorView.swift,
-				Views/Session/SessionSummaryView.swift,
-				Views/Settings/AboutPaperFocusView.swift,
-				Views/Settings/SettingsView.swift,
-				Views/Timer/FloatingFocusTimerHUD.swift,
-				Views/Timer/FocusTimerView.swift,
-				Views/Timer/MacReadingAIDialogView.swift,
-				Views/Timer/SidebarFocusTimerView.swift,
+				de.lproj/Localizable.strings,
+				en.lproj/Localizable.strings,
+				es.lproj/Localizable.strings,
+				fr.lproj/Localizable.strings,
+				it.lproj/Localizable.strings,
+				ja.lproj/Localizable.strings,
+				ko.lproj/Localizable.strings,
+				pt.lproj/Localizable.strings,
+				ru.lproj/Localizable.strings,
+				zh-Hans.lproj/Localizable.strings,
+				zh-Hant.lproj/Localizable.strings,
 			);
 			target = BCD57FBC2F79378E00DFCB74 /* PaperFocus */;
 		};
@@ -260,6 +220,9 @@
 			);
 			dependencies = (
 				BCAD721F2F79755A00C2F253 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				BCD57E852F72E3CD00DFCB74 /* PaperFocus */,
 			);
 			name = PaperFocus;
 			packageProductDependencies = (
